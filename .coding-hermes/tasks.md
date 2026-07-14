@@ -16,6 +16,7 @@
    - [x] SPEC.7: index.ts — public API exports — 102 lines
    - Structure migrated from subdirectories to flat files per spec §4.1
 
-## [ ] DOC — Generate/update SDK documentation
+## [x] DOC — Generate/update SDK documentation
+   - Commit: `eb8fff4` — README.md (226 lines, API reference, quickstart, examples), LICENSE (MIT), package-lock.json
 ## [ ] TEST — Ensure test coverage, fix failing tests
 ## [ ] CI — Verify CI pipeline health
