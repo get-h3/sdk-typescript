@@ -5,14 +5,16 @@
    - DuckBrain namespace empty — no prior project memory
    - File structure uses subdirectories (protocol/index.ts) vs spec's flat files (protocol.ts)
 
-## [ ] SPEC — Full SDK implementation per spec §4 (protocol.ts, harness.ts, middleware.ts, testbed.ts, examples/)
-   - [ ] SPEC.1: protocol.ts — TypeScript types + Zod schemas for all H3 types (§4.2)
-   - [ ] SPEC.2: harness.ts — Harness interface + Hono router (§4.3, §4.4)
-   - [ ] SPEC.3: middleware.ts — Error handling, logging, timeout middleware
-   - [ ] SPEC.4: testbed.ts — MockHermes for vitest (§6)
-   - [ ] SPEC.5: examples/minimal.ts — bare minimum harness example
-   - [ ] SPEC.6: examples/echo.ts — echo harness example
-   - [ ] SPEC.7: index.ts — public API exports
+## [x] SPEC — Full SDK implementation per spec §4 (protocol.ts, harness.ts, middleware.ts, testbed.ts, examples/)
+   - Commit: `8048423` — 11 files, +858/-9, glm-5.2 @ zai-glm worker
+   - [x] SPEC.1: protocol.ts — TypeScript types + Zod schemas for all H3 types (§4.2) — 310 lines, 30+ exports
+   - [x] SPEC.2: harness.ts — Harness interface + Hono router (§4.3, §4.4) — 183 lines, 6 endpoints
+   - [x] SPEC.3: middleware.ts — Error handling + request logging middleware — 54 lines
+   - [x] SPEC.4: testbed.ts — MockHermes for vitest (§6) — 118 lines
+   - [x] SPEC.5: examples/minimal.ts — bare minimum harness example — 45 lines
+   - [x] SPEC.6: examples/echo.ts — echo harness example — 48 lines
+   - [x] SPEC.7: index.ts — public API exports — 102 lines
+   - Structure migrated from subdirectories to flat files per spec §4.1
 
 ## [ ] DOC — Generate/update SDK documentation
 ## [ ] TEST — Ensure test coverage, fix failing tests
