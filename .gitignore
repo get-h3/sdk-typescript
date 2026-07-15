@@ -2,3 +2,8 @@ node_modules/
 dist/
 .vitest/
 coverage/
+
+# Hilo — local cache files (rebuildable)
+.vfs/graph/graph.db
+.vfs/graph/graph.db.wal
+.vfs/graph/.last_warm

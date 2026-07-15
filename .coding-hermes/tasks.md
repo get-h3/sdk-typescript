@@ -18,5 +18,7 @@
 
 ## [x] DOC — Generate/update SDK documentation
    - Commit: `eb8fff4` — README.md (226 lines, API reference, quickstart, examples), LICENSE (MIT), package-lock.json
-## [ ] TEST — Ensure test coverage, fix failing tests
+## [x] TEST — Test coverage for all 5 source modules (foreman-direct, 90 tests)
+   - vitest.config.ts, src/__tests__/{protocol,harness,middleware,testbed,index}.test.ts
+   - 90 tests across 5 files, all passing, guard PASS
 ## [ ] CI — Verify CI pipeline health
