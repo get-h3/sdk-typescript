@@ -21,4 +21,6 @@
 ## [x] TEST — Test coverage for all 5 source modules (foreman-direct, 90 tests)
    - vitest.config.ts, src/__tests__/{protocol,harness,middleware,testbed,index}.test.ts
    - 90 tests across 5 files, all passing, guard PASS
-## [ ] CI — Verify CI pipeline health
+## [x] CI — Verify CI pipeline health
+   - Created .github/workflows/ci.yml — Node 20/22, npm ci, tsc --noEmit, vitest run
+   - Pushes to main trigger CI, PR CI also configured
