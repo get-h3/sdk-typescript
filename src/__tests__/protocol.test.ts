@@ -95,7 +95,9 @@ describe("SessionStatusSchema", () => {
 describe("ErrorCodeSchema", () => {
   it("accepts valid error codes", () => {
     expect(ErrorCodeSchema.parse("INVALID_REQUEST")).toBe("INVALID_REQUEST");
-    expect(ErrorCodeSchema.parse("SESSION_NOT_FOUND")).toBe("SESSION_NOT_FOUND");
+    expect(ErrorCodeSchema.parse("SESSION_NOT_FOUND")).toBe(
+      "SESSION_NOT_FOUND",
+    );
     expect(ErrorCodeSchema.parse("INTERNAL_ERROR")).toBe("INTERNAL_ERROR");
   });
 });
@@ -127,7 +129,11 @@ describe("MessageSchema", () => {
       content: "Look at this",
       timestamp: "2026-01-01T00:00:00Z",
       attachments: [
-        { type: "image", url: "https://example.com/img.png", mime_type: "image/png" },
+        {
+          type: "image",
+          url: "https://example.com/img.png",
+          mime_type: "image/png",
+        },
       ],
     });
     expect(result.attachments).toHaveLength(1);
@@ -188,14 +194,20 @@ describe("ConfigSchema", () => {
 
   it("rejects temperature out of range", () => {
     expect(() =>
-      ConfigSchema.parse({ max_iterations: 10, timeout_seconds: 300, temperature: 3 }),
+      ConfigSchema.parse({
+        max_iterations: 10,
+        timeout_seconds: 300,
+        temperature: 3,
+      }),
     ).toThrow();
   });
 });
 
 describe("SessionStateSchema", () => {
   it("parses session state with defaults", () => {
-    const result = SessionStateSchema.parse({ started_at: "2026-01-01T00:00:00Z" });
+    const result = SessionStateSchema.parse({
+      started_at: "2026-01-01T00:00:00Z",
+    });
     expect(result.turn_count).toBe(0);
     expect(result.total_tool_calls).toBe(0);
     expect(result.cost_so_far).toBe(0);
@@ -273,7 +285,9 @@ describe("WaitSchema", () => {
   });
 
   it("rejects negative duration", () => {
-    expect(() => WaitSchema.parse({ reason: "wait", duration_seconds: -1 })).toThrow();
+    expect(() =>
+      WaitSchema.parse({ reason: "wait", duration_seconds: -1 }),
+    ).toThrow();
   });
 });
 
@@ -461,7 +475,10 @@ describe("DecisionSchema", () => {
     const result = DecisionSchema.parse({
       decision: "llm_call",
       decision_id: "00000000-0000-0000-0000-000000000006",
-      llm_call: { model: "test-model", messages: [{ role: "user", content: "hi" }] },
+      llm_call: {
+        model: "test-model",
+        messages: [{ role: "user", content: "hi" }],
+      },
     });
     expect(result.decision).toBe("llm_call");
     expect(result.llm_call?.model).toBe("test-model");

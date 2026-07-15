@@ -19,31 +19,33 @@ import { createMiddleware } from "hono/factory";
  * Logs method, path, status code, and duration in ms.
  * On exception, returns 500 JSON with ErrorResponse format.
  */
-export const requestLogger = createMiddleware(async (c: Context, next: Next) => {
-  const start = performance.now();
-  try {
-    await next();
-    const elapsed = Math.round(performance.now() - start);
-    console.info(
-      `${c.req.method} ${c.req.path} → ${c.res.status} (${elapsed}ms)`,
-    );
-  } catch (err) {
-    const elapsed = Math.round(performance.now() - start);
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(
-      `${c.req.method} ${c.req.path} → 500 (${elapsed}ms) — ${message}`,
-    );
-    return c.json(
-      {
-        error: {
-          code: "INTERNAL_ERROR" as const,
-          message,
+export const requestLogger = createMiddleware(
+  async (c: Context, next: Next) => {
+    const start = performance.now();
+    try {
+      await next();
+      const elapsed = Math.round(performance.now() - start);
+      console.info(
+        `${c.req.method} ${c.req.path} → ${c.res.status} (${elapsed}ms)`,
+      );
+    } catch (err) {
+      const elapsed = Math.round(performance.now() - start);
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `${c.req.method} ${c.req.path} → 500 (${elapsed}ms) — ${message}`,
+      );
+      return c.json(
+        {
+          error: {
+            code: "INTERNAL_ERROR" as const,
+            message,
+          },
         },
-      },
-      500,
-    );
-  }
-});
+        500,
+      );
+    }
+  },
+);
 
 /**
  * Attach request-logging middleware to a Hono application.

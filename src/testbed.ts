@@ -103,10 +103,7 @@ export class MockHermes {
   /**
    * Send a cancel request → return whether the harness confirmed.
    */
-  async cancel(
-    sessionId?: string,
-    reason?: CancelReason,
-  ): Promise<boolean> {
+  async cancel(sessionId?: string, reason?: CancelReason): Promise<boolean> {
     if (!this.harness.onCancel) {
       return true;
     }

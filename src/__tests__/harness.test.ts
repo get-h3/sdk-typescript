@@ -2,15 +2,22 @@ import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
 import { createH3Router } from "../harness.js";
 import type { Harness } from "../harness.js";
-import type { Decision, ProcessRequest, ResultRequest, CancelRequest } from "../protocol.js";
+import type {
+  Decision,
+  ProcessRequest,
+  ResultRequest,
+  CancelRequest,
+} from "../protocol.js";
 import type { HealthResponse } from "../protocol.js";
 
-function makeHarness(overrides?: Partial<{
-  onProcess: (req: ProcessRequest) => Promise<Decision>;
-  onResult: (req: ResultRequest) => Promise<Decision>;
-  onCancel: (req: CancelRequest) => Promise<boolean>;
-  onSessionTerminate: (sessionId: string) => Promise<void>;
-}>): Harness {
+function makeHarness(
+  overrides?: Partial<{
+    onProcess: (req: ProcessRequest) => Promise<Decision>;
+    onResult: (req: ResultRequest) => Promise<Decision>;
+    onCancel: (req: CancelRequest) => Promise<boolean>;
+    onSessionTerminate: (sessionId: string) => Promise<void>;
+  }>,
+): Harness {
   return {
     health(): HealthResponse {
       return {
@@ -22,18 +29,22 @@ function makeHarness(overrides?: Partial<{
       };
     },
     async onProcess(req: ProcessRequest): Promise<Decision> {
-      return overrides?.onProcess?.(req) ?? {
-        decision: "text",
-        decision_id: crypto.randomUUID(),
-        text: { content: `Got: ${req.message.content}`, finished: true },
-      };
+      return (
+        overrides?.onProcess?.(req) ?? {
+          decision: "text",
+          decision_id: crypto.randomUUID(),
+          text: { content: `Got: ${req.message.content}`, finished: true },
+        }
+      );
     },
     async onResult(req: ResultRequest): Promise<Decision> {
-      return overrides?.onResult?.(req) ?? {
-        decision: "end",
-        decision_id: crypto.randomUUID(),
-        end: { reason: "task_complete", summary: "Done" },
-      };
+      return (
+        overrides?.onResult?.(req) ?? {
+          decision: "end",
+          decision_id: crypto.randomUUID(),
+          end: { reason: "task_complete", summary: "Done" },
+        }
+      );
     },
     onCancel: overrides?.onCancel,
     onSessionTerminate: overrides?.onSessionTerminate,
@@ -255,9 +266,7 @@ describe("POST /v1/cancel", () => {
   });
 
   it("returns cancelled true when onCancel not defined", async () => {
-    const app = makeApp(
-      makeHarness({ onCancel: undefined as never }),
-    );
+    const app = makeApp(makeHarness({ onCancel: undefined as never }));
 
     const res = await app.request("/v1/cancel", {
       method: "POST",
@@ -329,7 +338,9 @@ describe("DELETE /v1/sessions/:session_id", () => {
       }),
     );
 
-    const res = await app.request("/v1/sessions/ses-fail", { method: "DELETE" });
+    const res = await app.request("/v1/sessions/ses-fail", {
+      method: "DELETE",
+    });
     expect(res.status).toBe(500);
   });
 });
