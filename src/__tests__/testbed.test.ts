@@ -1,30 +1,42 @@
 import { describe, it, expect } from "vitest";
 import { MockHermes } from "../testbed.js";
 import type { Harness } from "../harness.js";
-import type { Decision, ProcessRequest, ResultRequest, CancelRequest, HealthResponse } from "../protocol.js";
+import type {
+  Decision,
+  ProcessRequest,
+  ResultRequest,
+  CancelRequest,
+  HealthResponse,
+} from "../protocol.js";
 
-function makeHarness(overrides?: Partial<{
-  onProcess: (req: ProcessRequest) => Promise<Decision>;
-  onResult: (req: ResultRequest) => Promise<Decision>;
-  onCancel: (req: CancelRequest) => Promise<boolean>;
-}>): Harness {
+function makeHarness(
+  overrides?: Partial<{
+    onProcess: (req: ProcessRequest) => Promise<Decision>;
+    onResult: (req: ResultRequest) => Promise<Decision>;
+    onCancel: (req: CancelRequest) => Promise<boolean>;
+  }>,
+): Harness {
   return {
     health(): HealthResponse {
       return { status: "ok", version: "1.0.0", transport: "rest" };
     },
     async onProcess(req: ProcessRequest): Promise<Decision> {
-      return overrides?.onProcess?.(req) ?? {
-        decision: "text",
-        decision_id: crypto.randomUUID(),
-        text: { content: `Echo: ${req.message.content}`, finished: true },
-      };
+      return (
+        overrides?.onProcess?.(req) ?? {
+          decision: "text",
+          decision_id: crypto.randomUUID(),
+          text: { content: `Echo: ${req.message.content}`, finished: true },
+        }
+      );
     },
     async onResult(req: ResultRequest): Promise<Decision> {
-      return overrides?.onResult?.(req) ?? {
-        decision: "end",
-        decision_id: crypto.randomUUID(),
-        end: { reason: "task_complete" },
-      };
+      return (
+        overrides?.onResult?.(req) ?? {
+          decision: "end",
+          decision_id: crypto.randomUUID(),
+          end: { reason: "task_complete" },
+        }
+      );
     },
     async onCancel(req: CancelRequest): Promise<boolean> {
       return overrides?.onCancel?.(req) ?? false;
@@ -113,7 +125,9 @@ describe("MockHermes", () => {
 
   describe("cancel", () => {
     it("returns false when onCancel is not defined", async () => {
-      const mock = new MockHermes(makeHarness({ onCancel: undefined as never }));
+      const mock = new MockHermes(
+        makeHarness({ onCancel: undefined as never }),
+      );
       const result = await mock.cancel("ses-1", "user_interrupt");
       expect(result).toBe(false);
     });

@@ -9,7 +9,12 @@ import { Hono } from "hono";
 
 import { createH3Router } from "../harness.js";
 import type { Harness } from "../harness.js";
-import type { Decision, HealthResponse, ProcessRequest, ResultRequest } from "../protocol.js";
+import type {
+  Decision,
+  HealthResponse,
+  ProcessRequest,
+  ResultRequest,
+} from "../protocol.js";
 
 class EchoHarness implements Harness {
   async onProcess(req: ProcessRequest): Promise<Decision> {

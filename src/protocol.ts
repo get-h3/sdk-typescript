@@ -299,7 +299,10 @@ export type SessionResponse = z.infer<typeof SessionResponseSchema>;
 
 export const DecisionSchema = z.object({
   decision: DecisionTypeSchema,
-  decision_id: z.string().uuid().default(() => crypto.randomUUID()),
+  decision_id: z
+    .string()
+    .uuid()
+    .default(() => crypto.randomUUID()),
   tool_call: ToolCallSchema.optional(),
   llm_call: LLMCallSchema.optional(),
   text: TextResponseSchema.optional(),

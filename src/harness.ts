@@ -77,7 +77,11 @@ export function createH3Router(harness: Harness): Hono {
       const body = ProcessRequestSchema.parse(await c.req.json());
       req = body;
     } catch (err) {
-      return errorResponse(c, 400, `Invalid request: ${(err as Error).message}`);
+      return errorResponse(
+        c,
+        400,
+        `Invalid request: ${(err as Error).message}`,
+      );
     }
     try {
       const decision = await harness.onProcess(req);
@@ -98,7 +102,11 @@ export function createH3Router(harness: Harness): Hono {
     try {
       req = ResultRequestSchema.parse(await c.req.json());
     } catch (err) {
-      return errorResponse(c, 400, `Invalid request: ${(err as Error).message}`);
+      return errorResponse(
+        c,
+        400,
+        `Invalid request: ${(err as Error).message}`,
+      );
     }
     try {
       const decision = await harness.onResult(req);
@@ -119,7 +127,11 @@ export function createH3Router(harness: Harness): Hono {
     try {
       req = CancelRequestSchema.parse(await c.req.json());
     } catch (err) {
-      return errorResponse(c, 400, `Invalid request: ${(err as Error).message}`);
+      return errorResponse(
+        c,
+        400,
+        `Invalid request: ${(err as Error).message}`,
+      );
     }
     if (harness.onCancel) {
       try {
