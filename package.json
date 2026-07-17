@@ -36,6 +36,9 @@
     "agent",
     "harness"
   ],
+  "files": [
+    "dist/"
+  ],
   "publishConfig": {
     "access": "public"
   }
