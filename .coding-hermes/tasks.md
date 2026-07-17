@@ -24,3 +24,11 @@
 ## [x] CI — Verify CI pipeline health
    - Created .github/workflows/ci.yml — Node 20/22, npm ci, tsc --noEmit, vitest run
    - Pushes to main trigger CI, PR CI also configured
+## [x] E2E — h3-test compliance battery (43/43 passes)
+   - h3-test from get-h3/shim runs against echo harness on :9192
+   - 6 Zod schema fixes: message.timestamp optional, identity defaults (user_name/user_id),
+     config defaults (max_iterations/timeout_seconds), session_state.started_at optional
+   - Session tracking: known sessions tracked, unknown sessions return 404
+   - Context echo: process response includes context.history from incoming request
+   - Echo harness: finished=false for streaming indicators ("do not finish", "...")
+   - Commit: `06283ea` — 6 files, +96/-12, foreman-direct
