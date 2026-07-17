@@ -107,7 +107,7 @@ export const MessageSchema = z.object({
   role: z.string().default("user"),
   content: z.string(),
   attachments: z.array(AttachmentSchema).optional(),
-  timestamp: z.string(),
+  timestamp: z.string().optional(),
 });
 export type Message = z.infer<typeof MessageSchema>;
 
@@ -115,8 +115,8 @@ export const IdentitySchema = z.object({
   platform: z.string(),
   chat_id: z.string(),
   thread_id: z.string().optional(),
-  user_name: z.string(),
-  user_id: z.string(),
+  user_name: z.string().default("unknown"),
+  user_id: z.string().default("unknown"),
 });
 export type Identity = z.infer<typeof IdentitySchema>;
 
@@ -149,13 +149,13 @@ export const SessionStateSchema = z.object({
   total_tool_calls: z.number().default(0),
   total_llm_calls: z.number().default(0),
   cost_so_far: z.number().default(0),
-  started_at: z.string(),
+  started_at: z.string().optional(),
 });
 export type SessionState = z.infer<typeof SessionStateSchema>;
 
 export const ConfigSchema = z.object({
-  max_iterations: z.number(),
-  timeout_seconds: z.number(),
+  max_iterations: z.number().default(100),
+  timeout_seconds: z.number().default(60),
   project_dir: z.string().optional(),
   max_tool_calls_per_turn: z.number().optional(),
   temperature: z.number().min(0).max(2).optional(),
