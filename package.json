@@ -24,12 +24,18 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@hono/node-server": "^2.0.10",
     "@types/node": "^20.0.0",
     "prettier": "^3.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.0.0"
   },
-  "keywords": ["h3", "hermes", "agent", "harness"],
+  "keywords": [
+    "h3",
+    "hermes",
+    "agent",
+    "harness"
+  ],
   "publishConfig": {
     "access": "public"
   }

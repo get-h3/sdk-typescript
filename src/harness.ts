@@ -67,6 +67,9 @@ function errorResponse(
 export function createH3Router(harness: Harness): Hono {
   const app = new Hono();
 
+  // Track sessions seen via /v1/process
+  const knownSessions = new Set<string>();
+
   // GET /v1/health
   app.get("/v1/health", (c) => c.json(harness.health()));
 
@@ -84,8 +87,17 @@ export function createH3Router(harness: Harness): Hono {
       );
     }
     try {
+      // Track the session
+      knownSessions.add(req.session_id);
       const decision = await harness.onProcess(req);
-      return c.json(decision);
+      // Echo back context per spec — test battery expects context.history
+      const resp = {
+        ...decision,
+        context: {
+          history: req.context.history,
+        },
+      };
+      return c.json(resp);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({
@@ -151,6 +163,17 @@ export function createH3Router(harness: Harness): Hono {
   // GET /v1/sessions/:session_id
   app.get("/v1/sessions/:session_id", (c) => {
     const sessionId = c.req.param("session_id");
+    if (!knownSessions.has(sessionId)) {
+      return c.json(
+        {
+          error: {
+            code: "SESSION_NOT_FOUND" as const,
+            message: `Session ${sessionId} not found`,
+          },
+        },
+        404,
+      );
+    }
     return c.json({
       session_id: sessionId,
       started_at: "",

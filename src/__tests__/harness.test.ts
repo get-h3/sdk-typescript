@@ -283,15 +283,49 @@ describe("POST /v1/cancel", () => {
 // ── GET /v1/sessions/:session_id ─────────────────────────────────────
 
 describe("GET /v1/sessions/:session_id", () => {
-  it("returns session info", async () => {
+  it("returns session info for an active session", async () => {
     const app = makeApp(makeHarness());
-    const res = await app.request("/v1/sessions/ses-123");
+
+    // First create the session via /v1/process
+    const processRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-active",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
+    expect(processRes.status).toBe(200);
+
+    const res = await app.request("/v1/sessions/ses-active");
     expect(res.status).toBe(200);
 
     const body = await res.json();
-    expect(body.session_id).toBe("ses-123");
+    expect(body.session_id).toBe("ses-active");
     expect(body.status).toBe("active");
     expect(body.turn_count).toBe(0);
+  });
+
+  it("returns 404 for an unknown session", async () => {
+    const app = makeApp(makeHarness());
+    const res = await app.request("/v1/sessions/unknown-session");
+    expect(res.status).toBe(404);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("SESSION_NOT_FOUND");
   });
 });
 

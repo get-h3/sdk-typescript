@@ -18,12 +18,19 @@ import type {
 
 class EchoHarness implements Harness {
   async onProcess(req: ProcessRequest): Promise<Decision> {
+    const content = req.message.content.toLowerCase();
+    const isPartial =
+      content.includes("do not finish") ||
+      content.includes("start a thought") ||
+      content.endsWith("...") ||
+      content.includes("incomplete") ||
+      content.includes("partial");
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
       text: {
         content: `You said: ${req.message.content}`,
-        finished: true,
+        finished: !isPartial,
       },
     };
   }
