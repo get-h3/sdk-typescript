@@ -32,3 +32,11 @@
    - Context echo: process response includes context.history from incoming request
    - Echo harness: finished=false for streaming indicators ("do not finish", "...")
    - Commit: `06283ea` — 6 files, +96/-12, foreman-direct
+
+## [ ] P5-04 — Sync-protocol workflow: regenerate → test → release
+- [ ] Create `.github/workflows/sync-protocol.yml` — triggered by repository_dispatch from protocol repo
+- [ ] Steps: checkout → regenerate Zod schemas from latest protocol JSON Schema → `vitest run` → tag and release
+- [ ] Publish to npm on release
+- [ ] Test: protocol dispatches → TS SDK regenerates and releases automatically
+
+**Spec ref:** S08 (Cross-Repo Release Pipeline)
