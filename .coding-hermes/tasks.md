@@ -51,3 +51,13 @@
 **Commit:** foreman-direct
 
 **Spec ref:** S08 (Cross-Repo Release Pipeline)
+
+## [ ] P5-05 — Generator fidelity: reconcile generate-schemas.ts output with hand-written protocol.ts
+- [ ] Discovery: P5-04 generator produces different Zod output than current protocol.ts
+  - 151 insertions, 139 deletions diff
+  - 11 test failures when running generated output
+  - Root cause: SessionState fields (turn_count, total_tool_calls, cost_so_far, history, tools, models) are treated as required by generator but had defaults in hand-written version. Also `temperature` type mismatch (float vs integer).
+- [ ] Either fix generator to match current passing interpretation, OR update tests to match generator's stricter schema interpretation
+- [ ] Verify: 91/91 tests pass with unified protocol.ts, generator output matches committed version
+
+**Found:** Foreman idle tick #1 (2026-07-18)
