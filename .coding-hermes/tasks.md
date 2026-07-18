@@ -52,12 +52,12 @@
 
 **Spec ref:** S08 (Cross-Repo Release Pipeline)
 
-## [ ] P5-05 — Generator fidelity: reconcile generate-schemas.ts output with hand-written protocol.ts
-- [ ] Discovery: P5-04 generator produces different Zod output than current protocol.ts
-  - 151 insertions, 139 deletions diff
-  - 11 test failures when running generated output
-  - Root cause: SessionState fields (turn_count, total_tool_calls, cost_so_far, history, tools, models) are treated as required by generator but had defaults in hand-written version. Also `temperature` type mismatch (float vs integer).
-- [ ] Either fix generator to match current passing interpretation, OR update tests to match generator's stricter schema interpretation
-- [ ] Verify: 91/91 tests pass with unified protocol.ts, generator output matches committed version
+## [x] P5-05 — Generator fidelity: reconcile generate-schemas.ts output with hand-written protocol.ts
+- [x] Added FIELD_OVERRIDES mechanism: 16 field overrides for Message, Identity, SessionState, Config, etc.
+- [x] Fixed integer vs number type handling (temperature stays float, not int)
+- [x] Generator skips .optional() when .default() already present (Zod compat)
+- [x] All zodExpr calls pass schemaName for override lookup
+- [x] CI pipeline verified: generate → tsc → vitest (91/91) → re-gen (deterministic)
+- [x] Commit: `18808b6` — foreman-direct
 
 **Found:** Foreman idle tick #1 (2026-07-18)
