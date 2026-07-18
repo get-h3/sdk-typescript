@@ -8,3 +8,4 @@ coverage/
 .vfs/graph/graph.db.wal
 .vfs/graph/.last_warm
 .gitreins/tasks.yaml
+.schemas-changed

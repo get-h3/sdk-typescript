@@ -1,0 +1,113 @@
+name: Sync Protocol
+
+on:
+  repository_dispatch:
+    types: [schema-updated]
+  workflow_dispatch:
+
+jobs:
+  check-schema-alignment:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: get-h3/protocol
+          path: /tmp/protocol
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Regenerate schemas from protocol JSON Schema
+        run: npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+
+      - name: Check TypeScript compilation
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npx vitest run
+
+      - name: Verify schema alignment (diff check)
+        run: |
+          if [ -f .schemas-changed ]; then
+            echo "⚠️  Protocol schemas have changed!"
+            echo ""
+            echo "Generated output differs from src/protocol.ts"
+            echo ""
+            echo "Action required:"
+            echo "  1. Review the diff: git diff src/protocol.ts"
+            echo "  2. Update tests if needed"
+            echo "  3. Commit the regenerated protocol.ts"
+            echo "  4. Bump version: npm version patch"
+            echo "  5. Publish: npm publish"
+            echo ""
+            echo "Run locally to preview:"
+            echo "  npx tsx scripts/generate-schemas.ts"
+            echo "  git diff src/protocol.ts"
+            exit 1
+          fi
+          echo "✅ src/protocol.ts is up-to-date with protocol schemas"
+
+  # Release workflow (manual trigger after schema alignment is confirmed)
+  release:
+    needs: check-schema-alignment
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: get-h3/protocol
+          path: /tmp/protocol
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Regenerate schemas
+        run: npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+
+      - name: Verify tests pass
+        run: npx vitest run
+
+      - name: Commit regenerated schemas
+        run: |
+          git config user.name "h3-bot"
+          git config user.email "bot@get-h3.dev"
+          git add src/protocol.ts
+          git rm -f .schemas-changed || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: regenerate Zod schemas from protocol JSON Schema"
+            git push
+          fi
+
+      - name: Bump version and tag
+        run: |
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          git add package.json package-lock.json
+          git commit -m "release: v${VERSION} — protocol schema sync"
+          git tag "v${VERSION}"
+          git push --tags
+
+      - name: Publish to npm
+        run: |
+          npm run build
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

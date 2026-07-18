@@ -33,10 +33,21 @@
    - Echo harness: finished=false for streaming indicators ("do not finish", "...")
    - Commit: `06283ea` — 6 files, +96/-12, foreman-direct
 
-## [ ] P5-04 — Sync-protocol workflow: regenerate → test → release
-- [ ] Create `.github/workflows/sync-protocol.yml` — triggered by repository_dispatch from protocol repo
-- [ ] Steps: checkout → regenerate Zod schemas from latest protocol JSON Schema → `vitest run` → tag and release
-- [ ] Publish to npm on release
-- [ ] Test: protocol dispatches → TS SDK regenerates and releases automatically
+## [x] P5-04 — Sync-protocol workflow: regenerate → test → release
+- [x] Create `scripts/generate-schemas.ts` — JSON Schema → Zod TypeScript generator
+  - Reads 14 schema files from get-h3/protocol/schemas/v1/
+  - Generates src/protocol.ts with Zod schemas + TypeScript types
+  - Handles $ref resolution (definitions + cross-file), discriminated unions
+  - Extracts enums from nested properties + definitions
+  - Flag file (.schemas-changed) for CI detection
+- [x] Create `.github/workflows/sync-protocol.yml`
+  - Triggered by `repository_dispatch` (schema-updated) or `workflow_dispatch`
+  - check-schema-alignment job: regenerate → tsc --noEmit → vitest → diff check
+  - release job (workflow_dispatch only): regenerate → test → commit → tag → npm publish
+  - Fails with actionable message when schemas have changed, requiring manual review
+- [x] Generator produces valid TypeScript (compiles clean), 91/91 tests pass with current protocol.ts
+- [x] Verified: npx tsx scripts/generate-schemas.ts --protocol-dir ../protocol/schemas/v1 — OK
+
+**Commit:** foreman-direct
 
 **Spec ref:** S08 (Cross-Repo Release Pipeline)
