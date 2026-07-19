@@ -20,7 +20,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "hono": "^4.0.0",
+    "hono": "4.12.31",
     "zod": "^3.22.0"
   },
   "devDependencies": {
