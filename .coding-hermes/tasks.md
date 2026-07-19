@@ -61,3 +61,5 @@
 - [x] Commit: `18808b6` — foreman-direct
 
 **Found:** Foreman idle tick #1 (2026-07-18)
+**Found:** Foreman idle tick #2 (2026-07-18) — 91/91 tests, tsc clean, 0 open issues, 0 new DuckBrain tasks
+**Found:** Foreman idle tick #3 (2026-07-18) — 91/91 tests, tsc clean, no GH issues, DuckBrain empty, no protocol schema changes. npm audit: 4 vulns (esbuild via vitest, dev-only). hono patch (4.12.30→4.12.31) available.
