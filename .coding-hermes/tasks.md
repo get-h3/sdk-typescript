@@ -66,3 +66,5 @@
 **Found:** Foreman idle tick #4 (2026-07-18) — 91/91 tests, tsc clean, no GH issues, 0 DuckBrain tasks, no protocol schema changes. npm audit: 5 vulns (esbuild+vite+vitest, all dev-deps). Cooldown → 4h via scheduler API.
 **Found:** Foreman idle tick #5 (2026-07-19) — 91/91 tests, tsc clean, no GH issues, 0 DuckBrain tasks, no protocol schema changes. npm audit: 4 vulns (moderate:2, high:1, critical:1, all dev-deps). Cooldown at 12h. GitReins guard "tests" false-negative (pytest on TS repo). Scheduler disabled — no further ticks until re-enabled.
 **⚠️ Zombie tick #6 (2026-07-19 08:17Z):** Scheduler DB shows `Enabled: false, CooldownS: 43200` but dispatched this session anyway. Known scheduler bug — does not enforce the `Enabled` field. Hermes cron already deleted. No actionable work. Project is complete and disabled. Requires scheduler-side fix to prevent zombie dispatch.
+
+## [ ] NEVER-DONE — Run 11-point self-improvement audit
