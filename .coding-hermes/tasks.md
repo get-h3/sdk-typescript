@@ -128,3 +128,29 @@
 - [x] Worker: gpt-5.6-sol @ openai-codex
 
 ### Commit: `b8b4a13` — chore: upgrade Vitest to 3.2.6. Addresses MAINT-01.
+
+## [ ] MAINT-03 — Evaluate and execute major dependency upgrades (2026-07-20 22:13Z)
+
+Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
+
+| Package | Current | Latest | Risk | Action |
+|---|---|---|---|---|
+| @types/node | 20.19.43 | 26.1.1 | Low | Upgrade — system runs Node 24+ |
+| vitest | 3.2.7 | 4.1.10 | Low | Upgrade — single-pkg, no workspace, simple config |
+| @vitest/coverage-v8 | 3.2.7 | 4.1.10 | Low | Upgrade with vitest |
+| zod | 3.25.76 | 4.4.3 | Low-Med | 1 breaking API (`z.string().uuid()`→`z.uuid()`) at line 317 |
+| typescript | 5.9.3 | 7.0.2 | HIGH | **Defer** — Go-based native compiler, requires TS 6.0 intermediate step |
+
+**Viability assessment:**
+
+- **zod 4.x**: Protocol analysis shows only 1 affected call site: `z.string().uuid()` at protocol.ts:317. No `required_error`/`invalid_type_error` usage, no `.email()`/`.url()` method calls. Codemod available at hypermod.io. Tests (91) will catch any validation changes. → **Worth attempting.**
+- **vitest 4.x**: Our `vitest.config.ts` is simple (18 lines, single-package, no workspace). Vitest 4 replaces `workspace`→`projects` (N/A for us), updates coverage config keys, removes deprecated APIs. Our config uses only `include`, `environment`, `coverage.provider`, `coverage.include/exclude`, `coverage.thresholds`. No deprecated assertion APIs in test files (uses `describe`/`it`/`expect` standard APIs). → **Worth attempting.**
+- **@types/node 26**: Type-only change. System Node version (24.x) is compatible with @types/node 26.x which covers up to Node 26. → **Worth attempting.**
+- **typescript 7.0**: Go-based native compiler (`tsgo`). Breaking changes include `--strict` by default, `--target es5` removal, `--baseUrl` removal, `--moduleResolution node10` removal. Our config uses `target: "ES2022"`, `moduleResolution: "bundler"`, `strict: true` — compatible with TS 7 defaults. However, the entire compiler backend is new (C++→Go). Risk of subtle type inference differences, declaration emit changes, and ecosystem immaturity is too high for a stable SDK. **Deferred until TS 7.x matures (7.1+).**
+
+### Execution plan
+
+- [x] **MAINT-03a**: Upgrade zod 3.25→4.4 — migrate `z.string().uuid()`→`z.uuid()`, verify 91/91 tests pass, tsc clean
+- [ ] **MAINT-03b**: Upgrade vitest + @vitest/coverage-v8 3.2.7→4.1.10 — config migration, verify tests + coverage
+- [ ] **MAINT-03c**: Upgrade @types/node 20→26 — verify tsc clean
+- [ ] **MAINT-03d**: TypeScript 7.0 — DEFERRED (monitor TS 7.1+ release)
