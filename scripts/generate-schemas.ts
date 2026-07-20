@@ -106,7 +106,7 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
     role:       "REPLACE:z.string()",     // loose — incoming history can have any role
   },
   Tool: {
-    parameters: "REPLACE:z.record(z.unknown())",   // free-form params accepted
+    parameters: "REPLACE:z.record(z.string(), z.unknown())",   // free-form params accepted
   },
   SessionState: {
     turn_count:        ".default(0)",
@@ -125,10 +125,10 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
     models:  ".default([])",
   },
   ToolCall: {
-    params: "REPLACE:z.record(z.unknown())",    // free-form params
+    params: "REPLACE:z.record(z.string(), z.unknown())",    // free-form params
   },
   Decision: {
-    decision_id: '.uuid().default(() => crypto.randomUUID())',
+    decision_id: 'REPLACE:z.uuid().default(() => crypto.randomUUID())',
   },
   SessionResponse: {
     turn_count: ".default(0)",
@@ -137,10 +137,10 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
     transport: 'REPLACE:z.string().default("rest")',
   },
   ResultPayload: {
-    data: "REPLACE:z.record(z.unknown())",
+    data: "REPLACE:z.record(z.string(), z.unknown())",
   },
   ErrorDetail: {
-    details: "REPLACE:z.record(z.unknown())",
+    details: "REPLACE:z.record(z.string(), z.unknown())",
   },
 };
 
@@ -208,8 +208,8 @@ const ENUM_ADDITIONS: Record<string, string[]> = {
 // Inline-enum threshold: enums with this many or fewer values use single-line format
 const INLINE_ENUM_MAX = 3;
 
-// "params" / "parameters" fields of type object → z.record(z.unknown())
-const RECORD_FIELDS = new Set(["params", "parameters"]);
+// Free-form object fields → z.record(z.string(), z.unknown())
+const RECORD_FIELDS = new Set(["params", "parameters", "data", "details"]);
 
 // ── Resolver ──────────────────────────────────────────────────────────
 
@@ -294,9 +294,9 @@ class Resolver {
       }
       case "object": {
         if (!schema.properties) {
-          // "params"/"parameters" objects → z.record(z.unknown())
+          // Free-form objects → z.record(z.string(), z.unknown())
           if (fieldName && RECORD_FIELDS.has(fieldName)) {
-            return "z.record(z.unknown())";
+            return "z.record(z.string(), z.unknown())";
           }
           return "z.object({})";
         }
@@ -526,7 +526,15 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       1,
       "Decision"
     );
-    lines.push(`export const DecisionSchema = ${baseZod};`);
+    const decisionIdOverride = FIELD_OVERRIDES.Decision.decision_id;
+    const decisionIdExpr = decisionIdOverride.startsWith("REPLACE:")
+      ? decisionIdOverride.slice("REPLACE:".length)
+      : `z.string()${decisionIdOverride}`;
+    const decisionZod = baseZod.replace(
+      "decision_id: z.string(),",
+      `decision_id: ${decisionIdExpr},`,
+    );
+    lines.push(`export const DecisionSchema = ${decisionZod};`);
     lines.push(`export type Decision = z.infer<typeof DecisionSchema>;`);
     lines.push(``);
   }

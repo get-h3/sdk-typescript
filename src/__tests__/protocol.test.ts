@@ -424,7 +424,7 @@ describe("DecisionSchema", () => {
   it("parses a text decision", () => {
     const result = DecisionSchema.parse({
       decision: "text",
-      decision_id: "00000000-0000-0000-0000-000000000001",
+      decision_id: "00000000-0000-4000-8000-000000000001",
       text: { content: "Hello!", finished: true },
     });
     expect(result.decision).toBe("text");
@@ -434,7 +434,7 @@ describe("DecisionSchema", () => {
   it("parses a tool_call decision", () => {
     const result = DecisionSchema.parse({
       decision: "tool_call",
-      decision_id: "00000000-0000-0000-0000-000000000002",
+      decision_id: "00000000-0000-4000-8000-000000000002",
       tool_call: { name: "search", params: { q: "test" } },
     });
     expect(result.decision).toBe("tool_call");
@@ -444,7 +444,7 @@ describe("DecisionSchema", () => {
   it("parses an end decision", () => {
     const result = DecisionSchema.parse({
       decision: "end",
-      decision_id: "00000000-0000-0000-0000-000000000003",
+      decision_id: "00000000-0000-4000-8000-000000000003",
       end: { reason: "task_complete" },
     });
     expect(result.decision).toBe("end");
@@ -454,7 +454,7 @@ describe("DecisionSchema", () => {
   it("parses a wait decision", () => {
     const result = DecisionSchema.parse({
       decision: "wait",
-      decision_id: "00000000-0000-0000-0000-000000000004",
+      decision_id: "00000000-0000-4000-8000-000000000004",
       wait: { reason: "polling", duration_seconds: 5 },
     });
     expect(result.decision).toBe("wait");
@@ -464,7 +464,7 @@ describe("DecisionSchema", () => {
   it("parses a delegate decision", () => {
     const result = DecisionSchema.parse({
       decision: "delegate",
-      decision_id: "00000000-0000-0000-0000-000000000005",
+      decision_id: "00000000-0000-4000-8000-000000000005",
       delegate: { task: "Do X" },
     });
     expect(result.decision).toBe("delegate");
@@ -474,7 +474,7 @@ describe("DecisionSchema", () => {
   it("parses an llm_call decision", () => {
     const result = DecisionSchema.parse({
       decision: "llm_call",
-      decision_id: "00000000-0000-0000-0000-000000000006",
+      decision_id: "00000000-0000-4000-8000-000000000006",
       llm_call: {
         model: "test-model",
         messages: [{ role: "user", content: "hi" }],
