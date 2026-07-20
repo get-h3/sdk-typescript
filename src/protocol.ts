@@ -315,6 +315,7 @@ export type SessionResponse = z.infer<typeof SessionResponseSchema>;
 export const DecisionSchema = z.object({
     decision: DecisionTypeSchema,
     decision_id: z.uuid().default(() => crypto.randomUUID()),
+    history: z.array(HistoryEntrySchema).default([]),
     tool_call: z.any().optional(),
     llm_call: z.any().optional(),
     text: z.any().optional(),

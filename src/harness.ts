@@ -90,12 +90,10 @@ export function createH3Router(harness: Harness): Hono {
       // Track the session
       knownSessions.add(req.session_id);
       const decision = await harness.onProcess(req);
-      // Echo back context per spec — test battery expects context.history
+      // Echo back context per spec — test battery expects history at Decision level
       const resp = {
         ...decision,
-        context: {
-          history: req.context.history,
-        },
+        history: req.context.history,
       };
       return c.json(resp);
     } catch (err) {
