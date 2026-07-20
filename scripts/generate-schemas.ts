@@ -200,45 +200,6 @@ function indent(n: number): string {
   return "  ".repeat(n);
 }
 
-// ── Field-level overrides ─────────────────────────────────────────────
-// Maps "DefName.fieldName" → custom Zod expression. Used instead of
-// schema-derived expressions for fields where the committed hand-edited
-// protocol.ts diverges from the JSON Schema for practical leniency.
-
-const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
-  Attachment: {
-    type: "AttachmentTypeSchema",
-  },
-  Message: {
-    role: `z.string().default("user")`,
-  },
-  Identity: {
-    user_name: `z.string().default("unknown")`,
-    user_id: `z.string().default("unknown")`,
-  },
-  HistoryEntry: {
-    role: "z.string()",
-  },
-  Tool: {
-    parameters: "z.record(z.unknown())",
-  },
-  SessionState: {
-    turn_count: "z.number().default(0)",
-    total_tool_calls: "z.number().default(0)",
-    total_llm_calls: "z.number().default(0)",
-    cost_so_far: "z.number().default(0)",
-  },
-  Config: {
-    max_iterations: "z.number().default(100)",
-    timeout_seconds: "z.number().default(60)",
-  },
-  Context: {
-    history: "z.array(HistoryEntrySchema).default([])",
-    tools: "z.array(ToolSchema).default([])",
-    models: "z.array(ModelSchema).default([])",
-  },
-};
-
 // Extra enum values that should be added beyond what the schema defines
 const ENUM_ADDITIONS: Record<string, string[]> = {
   MessageRole: ["assistant", "system"],
@@ -339,29 +300,10 @@ class Resolver {
           }
           return "z.object({})";
         }
-        const prevDefName = this.currentDefName;
         const props: string[] = [];
         const required = new Set(schema.required ?? []);
         for (const [key, prop] of Object.entries(schema.properties)) {
           let expr = this.zodExpr(prop, level + 1, key);
-          if (!required.has(key)) expr = `${expr}.optional()`;
-          props.push(`${indent(level + 1)}${key}: ${expr},`);
-        }
-        this.currentDefName = prevDefName;
-        return `z.object({\n${props.join("\n")}\n${indent(level)}})`;
-      }
-      default:
-        if (schema.oneOf) return "z.any() /* oneOf */";
-        return "z.any()";
-    }
-  }
-}
-      case "object": {
-        if (!schema.properties) return "z.object({})";
-        const props: string[] = [];
-        const required = new Set(schema.required ?? []);
-        for (const [key, prop] of Object.entries(schema.properties)) {
-          let expr = this.zodExpr(prop, level + 1, schemaName, key);
           if (!required.has(key)) {
             // Don't add .optional() if the field already has .default() —
             // Zod's .default() makes the field effectively optional already,
