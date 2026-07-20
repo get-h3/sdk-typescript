@@ -97,3 +97,23 @@
 ### Non-idle tick: committed bug fix `f0d9940` (generator repair).
 ### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200
 ### Commit: `f0d9940` — fix generate-schemas.ts duplicate code
+
+## [x] Tick #11 — MAINT-02: Coverage reporting (2026-07-20 08:13Z)
+- [x] Install @vitest/coverage-v8@1 (vitest 1.6.x compatible)
+- [x] Configure vitest.config.ts: v8 provider, coverage thresholds (50% all metrics)
+- [x] Verify: 91/91 tests pass, tsc clean, coverage 97.79%/86.66%/100%/97.79%
+- [x] Scheduler: Enabled=true, CooldownS=7200, namespace=coding-hermes
+- [x] Protocol schemas: no changes detected (14 JSON Schema files)
+- [x] DuckBrain: namespace empty (no new tasks)
+- [x] Hilo: 51 edges, 25 files, flat library topology (expected for TS SDK)
+
+### Remaining Maintenance Items
+- [ ] **MAINT-01**: Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat (breaking)
+- [ ] **MAINT-03**: Evaluate major dep upgrades (typescript 5.9→7.0, zod 3.25→4.4, @types/node 20→26)
+- [ ] **MAINT-04**: Refine generator FIELD_OVERRIDES for nested object properties
+
+### Known Issues
+- GitReins guard false-negative: runs pytest on TS repo (config says `tests: enabled: false` but MCP ignores). Same issue since tick #5.
+- npm audit: 5 vulns (2C/1H/2M — all dev-deps via vitest/vite, blocked on MAINT-01)
+
+### Commit: `cf4b8e1` — feat: add coverage reporting (MAINT-02)
