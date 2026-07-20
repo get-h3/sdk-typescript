@@ -108,12 +108,23 @@
 - [x] Hilo: 51 edges, 25 files, flat library topology (expected for TS SDK)
 
 ### Remaining Maintenance Items
-- [ ] **MAINT-01**: Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat (breaking)
+- [x] **MAINT-01**: Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat (breaking) — `b8b4a13` (gpt-5.6-sol@openai-codex, 0 vulns, 91/91 tests, tsc clean)
 - [ ] **MAINT-03**: Evaluate major dep upgrades (typescript 5.9→7.0, zod 3.25→4.4, @types/node 20→26)
 - [ ] **MAINT-04**: Refine generator FIELD_OVERRIDES for nested object properties
 
 ### Known Issues
 - GitReins guard false-negative: runs pytest on TS repo (config says `tests: enabled: false` but MCP ignores). Same issue since tick #5.
-- npm audit: 5 vulns (2C/1H/2M — all dev-deps via vitest/vite, blocked on MAINT-01)
+- npm audit: 0 vulns (was 5 before MAINT-01 vitest upgrade)
 
 ### Commit: `cf4b8e1` — feat: add coverage reporting (MAINT-02)
+
+## [x] Tick #12 — MAINT-01: vitest upgrade (2026-07-20 14:03Z)
+- [x] Upgrade vitest ^1.0.0 → ^3.2.6, @vitest/coverage-v8 ^1.6.1 → ^3.2.6
+- [x] Resolved to 3.2.7 — no API breakage, vitest 1.x test APIs fully compatible
+- [x] 91/91 tests pass (398ms, was 519ms — vitest 3.x perf improvement)
+- [x] tsc --noEmit clean, npm audit: 0 vulns (was 5)
+- [x] Scheduler: Enabled=true, CooldownS=7200, namespace=coding-hermes
+- [x] GitReins guard PASS (secrets, lint, tests, dead_code)
+- [x] Worker: gpt-5.6-sol @ openai-codex
+
+### Commit: `b8b4a13` — chore: upgrade Vitest to 3.2.6. Addresses MAINT-01.
