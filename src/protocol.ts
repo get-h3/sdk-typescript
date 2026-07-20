@@ -131,7 +131,7 @@ export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 export const ToolSchema = z.object({
     name: z.string(),
     description: z.string(),
-    parameters: z.record(z.unknown()),
+    parameters: z.record(z.string(), z.unknown()),
   });
 export type Tool = z.infer<typeof ToolSchema>;
 
@@ -179,7 +179,7 @@ export type Context = z.infer<typeof ContextSchema>;
 
 export const ToolCallSchema = z.object({
     name: z.string(),
-    params: z.record(z.unknown()),
+    params: z.record(z.string(), z.unknown()),
     reasoning: z.string().optional(),
   });
 export type ToolCall = z.infer<typeof ToolCallSchema>;
@@ -243,7 +243,7 @@ export type ProcessRequest = z.infer<typeof ProcessRequestSchema>;
 export const ResultPayloadSchema = z.object({
     type: ResultTypeSchema,
     tool_name: z.string().optional(),
-    data: z.record(z.unknown()).optional(),
+    data: z.record(z.string(), z.unknown()).optional(),
     duration_ms: z.number().min(0).optional(),
     success: z.boolean(),
   });
@@ -255,7 +255,7 @@ export const ResultRequestSchema = z.object({
     result: z.object({
       type: z.enum(["tool_result", "llm_response", "text_sent", "delegate_result", "wait_timeout", "error"] as const),
       tool_name: z.string().optional(),
-      data: z.object({}).optional(),
+      data: z.record(z.string(), z.unknown()).optional(),
       duration_ms: z.number().int().min(0).optional(),
       success: z.boolean(),
     }),
@@ -286,7 +286,7 @@ export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 export const ErrorDetailSchema = z.object({
     code: ErrorCodeSchema,
     message: z.string(),
-    details: z.record(z.unknown()).optional(),
+    details: z.record(z.string(), z.unknown()).optional(),
   });
 export type ErrorDetail = z.infer<typeof ErrorDetailSchema>;
 
@@ -294,7 +294,7 @@ export const ErrorResponseSchema = z.object({
     error: z.object({
       code: z.enum(["INVALID_REQUEST", "INVALID_DECISION", "UNKNOWN_TOOL", "UNKNOWN_MODEL", "SESSION_NOT_FOUND", "SESSION_EXPIRED", "HARNESS_TIMEOUT", "INTERNAL_ERROR"] as const),
       message: z.string(),
-      details: z.object({}).optional(),
+      details: z.record(z.string(), z.unknown()).optional(),
     }),
   });
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
@@ -314,7 +314,7 @@ export type SessionResponse = z.infer<typeof SessionResponseSchema>;
 
 export const DecisionSchema = z.object({
     decision: DecisionTypeSchema,
-    decision_id: z.string().uuid().default(() => crypto.randomUUID()),
+    decision_id: z.uuid().default(() => crypto.randomUUID()),
     tool_call: z.any().optional(),
     llm_call: z.any().optional(),
     text: z.any().optional(),
