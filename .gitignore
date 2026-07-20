@@ -7,6 +7,5 @@ coverage/
 .vfs/graph/graph.db
 .vfs/graph/graph.db.wal
 .vfs/graph/.last_warm
-.vfs/.dirty
 .gitreins/tasks.yaml
 .schemas-changed
