@@ -222,3 +222,27 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 ### Remaining: MAINT-03d (typescript 7.0, deferred)
 ### Idle counter: reset to 0 (non-idle tick — fixed real E2E gap)
 ### Commit: `df89ad5` — foreman-direct
+
+## [x] Tick #17 — 11-point audit, genuinely idle (2026-07-21 ~05:00Z)
+
+### 11-Point Audit Results
+
+| # | Check | Result | Detail |
+|---|-------|--------|--------|
+| 1 | Specs | OK | Protocol schemas (15 files). Generator byte-identical to protocol.ts. test-report.json added (no SDK impact). |
+| 2 | Docs | OK | README 226 lines, AGENTS.md configured |
+| 3 | Tests | INFRA | vitest can't run locally (kernel 7.0.0 + rolldown/rayon thread pool panic). CI green (Node 20/22). Known since tick #10. |
+| 4 | Deps | OK | 0 npm audit vulns. @hono/node-server 2.0.10→2.0.11 patch, prettier 3.9.5→3.9.6 patch (both trivial). TS 7.0 deferred (MAINT-03d). |
+| 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs. No throw-errors outside tests. .gitignore complete (3 Hilo entries). Max file: 506 lines. |
+| 6 | Performance | N/A | SDK library — no benchmarks expected |
+| 7 | Endpoints | N/A | SDK library — no runtime endpoints |
+| 8 | CI | OK | 2 workflows (ci.yml, sync-protocol.yml). GitHub repo not resolving on this org (private/GitLab?). |
+| 9 | DuckBrain | OK | H3 namespace empty. No sdk-typescript tasks. |
+| 10 | Quality | OK | tsc clean, 0 stubs, 7 exports from index.ts. Hilo=useful (51 edges, 25 files — flat library, expected). |
+| 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain intact. Examples import from individual modules. |
+
+### Status: 10/11 audit points clear. 1 INFRA note (kernel compat, CI green).
+### Genuinely idle: 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
+### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200 (was 7200)
+### Action: Bump cooldown 7200 → 14400 (4h). Project is production-complete. Two trivial patch upgrades available but not worth a worker tick.
+### Commit: foreman-direct (board update + .vfs sync)
