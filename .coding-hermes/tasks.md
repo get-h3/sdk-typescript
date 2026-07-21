@@ -246,3 +246,28 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 ### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200 (was 7200)
 ### Action: Bump cooldown 7200 → 14400 (4h). Project is production-complete. Two trivial patch upgrades available but not worth a worker tick.
 ### Commit: foreman-direct (board update + .vfs sync)
+
+## [x] Tick #18 — 11-point audit, genuinely idle (2026-07-21 05:42Z)
+
+### 11-Point Audit Results
+
+| # | Check | Result | Detail |
+|---|-------|--------|--------|
+| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator crashes locally (kernel 7.0.0 thread issue) but byte-identical verified tick #14. |
+| 2 | Docs | OK | README 226 lines, AGENTS.md configured |
+| 3 | Tests | INFRA | vitest hangs locally (kernel 7.0.0 + rolldown/rayon thread pool panic — 10s timeout hits 124). CI green (Node 20/22). Known since tick #10. |
+| 4 | Deps | OK | 0 npm audit vulns. @hono/node-server 2.0.10→2.0.11 patch, prettier 3.9.5→3.9.6 patch (both trivial). TS 7.0 deferred (MAINT-03d). |
+| 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs (rg scan clean). No throw-errors outside tests. .gitignore complete. Max file: 506 lines. |
+| 6 | Performance | N/A | SDK library — no benchmarks expected |
+| 7 | Endpoints | N/A | SDK library — no runtime endpoints |
+| 8 | CI | OK | 2 workflows (ci.yml, sync-protocol.yml). GitHub repo — GitLab likely. |
+| 9 | DuckBrain | OK | H3 namespace: no sdk-typescript tasks. |
+| 10 | Quality | OK | tsc clean, 0 stubs. Hilo=useful (51 edges, 25 files — flat library, expected topology). dist/ orphan noise present (build artifacts, harmless). |
+| 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain intact. Examples import from individual modules. |
+
+### Status: 10/11 audit points clear. 1 INFRA note (kernel compat — CI green).
+### Genuinely idle: 3rd consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
+### Scheduler: h3-sdk-typescript-foreman — Enabled: true. Fleet API reports 43 projects, 1 active tick.
+### ⚠️ Cooldown anomaly: Tick #17 bumped to 14400 (4h) but tick #18 fired only 42 min later. Possible scheduler restart or cooldown not persisted.
+### Action: Bump cooldown → 28800 (8h). Project is production-complete. Two trivial patch upgrades not worth a worker tick.
+### Commit: foreman-direct (board update)
