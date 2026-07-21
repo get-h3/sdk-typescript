@@ -10,35 +10,49 @@
 
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import type { Harness, Decision, ProcessRequest, ResultRequest, HealthResponse } from "../../src/index.js";
+import type {
+  Harness,
+  Decision,
+  ProcessRequest,
+  ResultRequest,
+  HealthResponse,
+} from "../../src/index.js";
 import { createH3Router } from "../../src/index.js";
 
 class EchoHarness implements Harness {
   private responseCount = 0;
+  private streaming = false;
 
   async onProcess(req: ProcessRequest): Promise<Decision> {
+    // Track streaming mode: messages containing "do not finish" trigger unfinished text
+    this.streaming =
+      req.message.content.includes("do not finish") ||
+      req.message.content.includes("...");
+    const finished = !this.streaming;
     const content = `Echo: ${req.message.content}`;
     return {
       decision: "text",
       decision_id: "echo-001",
-      text: { content, finished: true },
+      text: { content, finished },
     } as Decision;
   }
 
   async onResult(req: ResultRequest): Promise<Decision> {
     this.responseCount++;
-    if (this.responseCount >= 2) {
+    // End after 2 results for normal mode, stay in stream for streaming
+    if (!this.streaming && this.responseCount >= 2) {
       return {
         decision: "end",
         decision_id: "echo-end",
         end: { reason: "task_complete", summary: "Echo conversation complete" },
       } as Decision;
     }
+    const finished = !this.streaming;
     const content = `Result received: ${req.decision_id}`;
     return {
       decision: "text",
       decision_id: "echo-002",
-      text: { content, finished: true },
+      text: { content, finished },
     } as Decision;
   }
 
