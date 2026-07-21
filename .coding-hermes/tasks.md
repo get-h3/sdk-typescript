@@ -210,3 +210,15 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 ### Genuinely idle: 15 schema files, protocol.ts in sync. 91/91 tests. 0 vulns.
 ### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200 (was 7200)
 ### Action: Bump cooldown 7200 → 14400 (4h). Project is production-complete.
+
+## [x] Tick #16 — Echo harness streaming fix (2026-07-21 02:24Z)
+
+- [x] **E2E gap found**: `process_text_finished_false` — echo harness returned `finished: true` for all text decisions. Go/Python echo harnesses support streaming via "do not finish" / "..." content detection.
+- [x] **Fix**: Added `streaming` state to EchoHarness — detects "do not finish" / "..." in message content, propagates to `finished` in text decisions, and skips end-after-2 in streaming mode.
+- [x] **Verification**: h3-test 43/43 (was 42/43), tsc --noEmit clean, 91/91 tests pass, npm audit 0 vulns.
+- [x] Scheduler: Enabled=true, CooldownS=7200, namespace=coding-hermes
+- [x] GitReins: Guard PASS (secrets, lint, dead_code). Pre-commit tests false-positive (pytest on TS repo — known).
+
+### Remaining: MAINT-03d (typescript 7.0, deferred)
+### Idle counter: reset to 0 (non-idle tick — fixed real E2E gap)
+### Commit: `df89ad5` — foreman-direct
