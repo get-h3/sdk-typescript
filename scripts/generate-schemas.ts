@@ -129,6 +129,7 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
   },
   Decision: {
     decision_id: 'REPLACE:z.uuid().default(() => crypto.randomUUID())',
+    history: ".default([])",
   },
   SessionResponse: {
     turn_count: ".default(0)",
@@ -138,6 +139,7 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
   },
   ResultPayload: {
     data: "REPLACE:z.record(z.string(), z.unknown())",
+    duration_ms: "REPLACE:z.number().min(0)",  // schema says integer, but ms can be fractional
   },
   ErrorDetail: {
     details: "REPLACE:z.record(z.string(), z.unknown())",
@@ -206,7 +208,7 @@ const ENUM_ADDITIONS: Record<string, string[]> = {
 };
 
 // Inline-enum threshold: enums with this many or fewer values use single-line format
-const INLINE_ENUM_MAX = 3;
+const INLINE_ENUM_MAX = 50;  // always use single-line enum format
 
 // Free-form object fields → z.record(z.string(), z.unknown())
 const RECORD_FIELDS = new Set(["params", "parameters", "data", "details"]);
@@ -249,14 +251,18 @@ class Resolver {
   }
 
   zodExpr(schema: JsonSchema, level: number, fieldName?: string): string {
-    // Check field-level override first
+    // Check for REPLACE override first — these must fire before enum/$ref/const
+    // early exits, since overrides intentionally replace enum-typed fields
+    // with looser types (e.g., role enum → z.string()).
+    let override: string | undefined;
     if (fieldName && this.currentDefName) {
-      const overrides = FIELD_OVERRIDES[this.currentDefName];
-      if (overrides?.[fieldName]) {
-        return overrides[fieldName];
-      }
+      override = FIELD_OVERRIDES[this.currentDefName]?.[fieldName];
+    }
+    if (override?.startsWith("REPLACE:")) {
+      return override.slice("REPLACE:".length);
     }
 
+    // Early exits — these don't get field-level overrides
     if (schema.const !== undefined) {
       return `z.literal(${JSON.stringify(schema.const)})`;
     }
@@ -270,7 +276,6 @@ class Resolver {
     if (schema.enum) {
       if (schema.enum.every((v) => typeof v === "string")) {
         const vals = schema.enum.map((v) => JSON.stringify(v));
-        // Inline for short enums, multiline for longer
         if (vals.length <= INLINE_ENUM_MAX) {
           return `z.enum([${vals.join(", ")}] as const)`;
         }
@@ -278,48 +283,67 @@ class Resolver {
       }
       return `z.union([${schema.enum.map((v) => JSON.stringify(v)).join(", ")}])`;
     }
+
+    // Build the base Zod expression
+    let expr: string;
     switch (schema.type) {
-      case "string": return "z.string()";
-      case "number":
-      case "integer": {
-        let e = "z.number()";
-        if (schema.minimum !== undefined) e = `z.number().min(${schema.minimum})`;
-        if (Number.isInteger(schema.minimum)) e = e.replace("z.number()", "z.number().int()");
-        return e;
+      case "string": expr = "z.string()"; break;
+      case "number": {
+        expr = "z.number()";
+        if (schema.minimum !== undefined) expr += `.min(${schema.minimum})`;
+        if (schema.maximum !== undefined) expr += `.max(${schema.maximum})`;
+        break;
       }
-      case "boolean": return "z.boolean()";
+      case "integer": {
+        expr = "z.number().int()";
+        if (schema.minimum !== undefined) expr += `.min(${schema.minimum})`;
+        if (schema.maximum !== undefined) expr += `.max(${schema.maximum})`;
+        break;
+      }
+      case "boolean": expr = "z.boolean()"; break;
       case "array": {
-        if (schema.items) return `z.array(${this.zodExpr(schema.items, level)})`;
-        return "z.array(z.any())";
+        if (schema.items) {
+          expr = `z.array(${this.zodExpr(schema.items, level)})`;
+        } else {
+          expr = "z.array(z.any())";
+        }
+        break;
       }
       case "object": {
         if (!schema.properties) {
-          // Free-form objects → z.record(z.string(), z.unknown())
           if (fieldName && RECORD_FIELDS.has(fieldName)) {
-            return "z.record(z.string(), z.unknown())";
+            expr = "z.record(z.string(), z.unknown())";
+          } else {
+            expr = "z.object({})";
           }
-          return "z.object({})";
-        }
-        const props: string[] = [];
-        const required = new Set(schema.required ?? []);
-        for (const [key, prop] of Object.entries(schema.properties)) {
-          let expr = this.zodExpr(prop, level + 1, key);
-          if (!required.has(key)) {
-            // Don't add .optional() if the field already has .default() —
-            // Zod's .default() makes the field effectively optional already,
-            // and chaining .optional() prevents the default from firing.
-            if (!expr.includes(".default(")) {
-              expr = `${expr}.optional()`;
+        } else {
+          const props: string[] = [];
+          const required = new Set(schema.required ?? []);
+          for (const [key, prop] of Object.entries(schema.properties)) {
+            let propExpr = this.zodExpr(prop, level + 1, key);
+            if (!required.has(key)) {
+              if (!propExpr.includes(".default(")) {
+                propExpr = `${propExpr}.optional()`;
+              }
             }
+            props.push(`${indent(level + 1)}${key}: ${propExpr},`);
           }
-          props.push(`${indent(level + 1)}${key}: ${expr},`);
+          expr = `z.object({\n${props.join("\n")}\n${indent(level)}})`;
         }
-        return `z.object({\n${props.join("\n")}\n${indent(level)}})`;
+        break;
       }
       default:
-        if (schema.oneOf) return "z.any() /* oneOf */";
-        return "z.any()";
+        if (schema.oneOf) expr = "z.any() /* oneOf */";
+        else expr = "z.any()";
+        break;
     }
+
+    // Apply suffix override
+    if (override) {
+      expr = expr + override;
+    }
+
+    return expr;
   }
 }
 
@@ -423,6 +447,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
     if (!exportName) continue;
     const schema = resolver.definitions.get(defName);
     if (!schema) continue;
+    resolver.currentDefName = exportName;
     const zodExpr = resolver.zodExpr(schema, 1, exportName);
     lines.push(`export const ${exportName}Schema = ${zodExpr};`);
     lines.push(`export type ${exportName} = z.infer<typeof ${exportName}Schema>;`);
@@ -448,6 +473,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       }
     }
     if (!schema) continue;
+    resolver.currentDefName = name;
     const zodExpr = resolver.zodExpr(schema, 1, name);
     lines.push(`export const ${name}Schema = ${zodExpr};`);
     lines.push(`export type ${name} = z.infer<typeof ${name}Schema>;`);
@@ -472,6 +498,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       }
     }
     if (!schema) continue;
+    resolver.currentDefName = name;
     const zodExpr = resolver.zodExpr(schema, 1, name);
     lines.push(`export const ${name}Schema = ${zodExpr};`);
     lines.push(`export type ${name} = z.infer<typeof ${name}Schema>;`);
@@ -496,6 +523,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       }
     }
     if (!schema) continue;
+    resolver.currentDefName = name;
     const zodExpr = resolver.zodExpr(schema, 1, name);
     lines.push(`export const ${name}Schema = ${zodExpr};`);
     lines.push(`export type ${name} = z.infer<typeof ${name}Schema>;`);
@@ -508,6 +536,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
 
   const decisionFile = files.find((f) => f.basename === "decision");
   if (decisionFile) {
+    resolver.currentDefName = "Decision";
     const baseZod = resolver.zodExpr(
       {
         type: "object",
@@ -515,6 +544,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
         properties: {
           decision: { $ref: "#/definitions/DecisionType" },
           decision_id: { type: "string" },
+          history: { type: "array", items: { $ref: "#/definitions/HistoryEntry" } },
           tool_call: { $ref: "#/definitions/ToolCall" },
           llm_call: { $ref: "#/definitions/LLMCall" },
           text: { $ref: "#/definitions/TextResponse" },
@@ -526,15 +556,7 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       1,
       "Decision"
     );
-    const decisionIdOverride = FIELD_OVERRIDES.Decision.decision_id;
-    const decisionIdExpr = decisionIdOverride.startsWith("REPLACE:")
-      ? decisionIdOverride.slice("REPLACE:".length)
-      : `z.string()${decisionIdOverride}`;
-    const decisionZod = baseZod.replace(
-      "decision_id: z.string(),",
-      `decision_id: ${decisionIdExpr},`,
-    );
-    lines.push(`export const DecisionSchema = ${decisionZod};`);
+    lines.push(`export const DecisionSchema = ${baseZod};`);
     lines.push(`export type Decision = z.infer<typeof DecisionSchema>;`);
     lines.push(``);
   }
