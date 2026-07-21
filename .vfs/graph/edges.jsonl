@@ -53,3 +53,7 @@
 {"from":"scripts/generate-schemas.ts","to":"pkg:node:fs","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"scripts/generate-schemas.ts","to":"pkg:node:path","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"scripts/generate-schemas.ts","to":"pkg:node:url","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"examples/echo/index.ts","to":"pkg:hono","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"examples/echo/index.ts","to":"pkg:@hono/node-server","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"examples/echo/index.ts","to":"local:../../src/index.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"examples/echo/index.ts","to":"local:../../src/index.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
