@@ -88,10 +88,10 @@
 | 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain repaired. |
 
 ### Open Items
-- [ ] **MAINT-01**: Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat (breaking)
-- [ ] **MAINT-02**: Install @vitest/coverage-v8 for coverage reporting
-- [ ] **MAINT-03**: Evaluate major dep upgrades (typescript 5.9→7.0, zod 3.25→4.4, @types/node 20→26)
-- [ ] **MAINT-04**: Refine generator FIELD_OVERRIDES for nested object properties (schemaName passthrough) — generated output currently differs from hand-tuned protocol.ts for nested fields
+- [x] **MAINT-01**: Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat (breaking) — `b8b4a13` (tick #12)
+- [x] **MAINT-02**: Install @vitest/coverage-v8 for coverage reporting — `cf4b8e1` (tick #11)
+- [x] **MAINT-03**: Evaluate major dep upgrades (typescript 5.9→7.0, zod 3.25→4.4, @types/node 20→26) — `868fef9` (tick #13) + `7482e77` (tick #13)
+- [x] **MAINT-04**: Refine generator FIELD_OVERRIDES for nested object properties (schemaName passthrough) — fixed in tick #14, generator now produces byte-identical output to hand-tuned protocol.ts
 
 ### Status: 10/11 audit points clear. 1 INFRA note (kernel compat), 4 maintenance items.
 ### Non-idle tick: committed bug fix `f0d9940` (generator repair).
@@ -166,4 +166,24 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 
 ### Commit: `868fef9` — foreman-direct
 
-### Remaining: MAINT-03d (typescript 7.0, deferred), MAINT-04 (generator FIELD_OVERRIDES for nested objects)
+### Remaining: MAINT-03d (typescript 7.0, deferred)
+
+## [x] Tick #14 (2026-07-20 21:50Z) — MAINT-04: Generator FIELD_OVERRIDES fix
+
+- [x] **Root cause analysis**: Three bugs prevented FIELD_OVERRIDES from working:
+  1. `currentDefName` was never set — all override lookups returned undefined
+  2. Integer/number type handling was conflated — `.int()` only added when `minimum` existed AND was integer-valued, instead of based on JSON Schema `"type"`
+  3. REPLACE overrides were checked AFTER enum early-exit — enum-typed fields (Message.role, HistoryEntry.role, HealthResponse.transport) never reached the override check
+- [x] **Fix 1**: Set `resolver.currentDefName` before each top-level `zodExpr` call (5 call sites)
+- [x] **Fix 2**: Separate `case "number"` and `case "integer"` — integer always uses `.int()`, number never does. Both respect min/max.
+- [x] **Fix 3**: Move REPLACE override check before `const`/`$ref`/`enum` early exits — REPLACE overrides now take priority over schema-driven generation
+- [x] **Fix 4**: Restructure `zodExpr` to single exit point — suffix overrides appended to generated expression after switch, not returned raw
+- [x] **Additions**: `Decision.history` field in synthetic schema + `.default([])` override. `ResultPayload.duration_ms` REPLACE override (schema: integer → SDK: float).
+- [x] **Verification**: Generator output now byte-identical to hand-tuned `protocol.ts`. Idempotent (re-run produces no diff). 91/91 tests pass (253ms). tsc --noEmit clean. npm audit: 0 vulns.
+- [x] Scheduler: Enabled=true, CooldownS=7200, namespace=coding-hermes
+- [x] GitReins: Guard PASS (secrets, lint, tests, dead_code)
+- [x] Hilo: 51 edges, 25 files (flat library — expected)
+
+### Commit: `c56f1b6` — foreman-direct
+
+### Remaining: MAINT-03d (typescript 7.0, deferred)
