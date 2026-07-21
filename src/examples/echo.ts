@@ -28,6 +28,7 @@ class EchoHarness implements Harness {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
+      history: [],
       text: {
         content: `You said: ${req.message.content}`,
         finished: !isPartial,
@@ -39,6 +40,7 @@ class EchoHarness implements Harness {
     return {
       decision: "end",
       decision_id: crypto.randomUUID(),
+      history: [],
       end: { reason: "task_complete" },
     };
   }
