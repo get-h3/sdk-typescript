@@ -151,6 +151,19 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 ### Execution plan
 
 - [x] **MAINT-03a**: Upgrade zod 3.25→4.4 — migrate `z.string().uuid()`→`z.uuid()`, verify 91/91 tests pass, tsc clean
-- [ ] **MAINT-03b**: Upgrade vitest + @vitest/coverage-v8 3.2.7→4.1.10 — config migration, verify tests + coverage
-- [ ] **MAINT-03c**: Upgrade @types/node 20→26 — verify tsc clean
+- [x] **MAINT-03b**: Upgrade vitest + @vitest/coverage-v8 3.2.7→4.1.10 — config migration, verify tests + coverage ✅ `868fef9`
+- [x] **MAINT-03c**: Upgrade @types/node 20→26 — verify tsc clean ✅ `868fef9`
 - [ ] **MAINT-03d**: TypeScript 7.0 — DEFERRED (monitor TS 7.1+ release)
+
+## [x] Tick #13 (2026-07-20 19:32Z) — MAINT-03b vitest 4.x + MAINT-03c @types/node 26
+
+- [x] **Self-heal**: tsc broken by prior commit `60b8b89` (history field added to DecisionSchema, examples not updated). Fixed echo.ts + minimal.ts: added `history: []` to all Decision returns.
+- [x] **MAINT-03b**: vitest 3.2.7→4.1.10, @vitest/coverage-v8 3.2.7→4.1.10. Config compatible as-is. 91/91 tests (308ms, was 519ms→398ms→308ms). Coverage 94.59%.
+- [x] **MAINT-03c**: @types/node 20.19.43→26.1.1. tsc --noEmit clean.
+- [x] npm audit: 0 vulns. Only typescript remains on 5.9.3 (7.0 deferred).
+- [x] Guard: MCP PASS (secrets/lint/tests/dead_code). Pre-commit hook still has pytest false-negative.
+- [x] Scheduler: Enabled=true, CooldownS=7200, namespace=coding-hermes.
+
+### Commit: `868fef9` — foreman-direct
+
+### Remaining: MAINT-03d (typescript 7.0, deferred), MAINT-04 (generator FIELD_OVERRIDES for nested objects)
