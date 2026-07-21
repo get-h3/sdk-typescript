@@ -21,6 +21,7 @@ class MinimalHarness implements Harness {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
+      history: [],
       text: { content: "Hello from TypeScript!", finished: true },
     };
   }
@@ -29,6 +30,7 @@ class MinimalHarness implements Harness {
     return {
       decision: "end",
       decision_id: crypto.randomUUID(),
+      history: [],
       end: { reason: "task_complete" },
     };
   }
