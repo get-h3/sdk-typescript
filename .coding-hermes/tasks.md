@@ -69,29 +69,29 @@
 **⚠️ Tick #7 (2026-07-19 14:30Z):** cb01700 — "11-point audit clean, project complete." Board NEVER-DONE task unmarked. Claim not verified.
 **🔍 Tick #8 (2026-07-19 16:35Z):** Full 11-point audit. Scheduler GET: **Enabled: true, CooldownS: 7200.** Prior ticks #5/#6/#7 fabricated the disable claim (Fabrication Class 1). 91/91 tests, tsc clean, CI green. 4 npm vulns (all dev-deps, vitest critical CVSS 9.8 fixed in 3.2.6+). 4 deps have major version upgrades available (all breaking). DuckBrain: 1 memory (sparse). .gitignore: added .vfs/.dirty. Examples lack test files (expected for SDK examples). No stubs, TODOs, or long files.
 
-## [ ] NEVER-DONE — Run 11-point self-improvement audit (last run: tick #20, 2026-07-21 20:38Z)
+## [ ] NEVER-DONE — Run 11-point self-improvement audit (last run: tick #22, 2026-07-22 04:18Z)
 
-### 11-Point Audit Results (Tick #20 — 4th consecutive idle tick)
+### 11-Point Audit Results (Tick #22 — 6th+ consecutive idle tick)
 
 | # | Check | Result | Detail |
 |---|-------|--------|--------|
-| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator byte-identical to protocol.ts (verified this tick). |
+| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator byte-identical to protocol.ts (verified tick #14). |
 | 2 | Docs | OK | README 226 lines, AGENTS.md configured |
-| 3 | Tests | **FIXED** | **91/91 tests pass LOCALLY (281ms). Kernel 7.0.0 + rolldown thread issue resolved.** Coverage 94.59%/75%/100%/94.54%. All above 50% threshold. |
+| 3 | Tests | OK | **91/91 tests pass LOCALLY (420ms).** Coverage 94.59%/75%/100%/94.54%. All above 50% threshold. Kernel thread issue remains resolved. |
 | 4 | Deps | OK | 0 npm audit vulns. @hono/node-server 2.0.10→2.0.11 patch, prettier 3.9.5→3.9.6 patch (both trivial). TS 7.0 deferred (MAINT-03d). |
-| 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs. Git status clean. Max file: 506 lines. |
+| 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs (rg scan clean). Git status clean. Max file: 616 lines (generate-schemas.ts). Total: 3,536 lines across 12 source files. |
 | 6 | Performance | N/A | SDK library — no benchmarks expected |
 | 7 | Endpoints | N/A | SDK library — no runtime endpoints |
-| 8 | CI | OK | GitHub Actions green (3 consecutive). Node 20/22 matrix. sync-protocol workflow ready. |
+| 8 | CI | OK | GitHub Actions green (3 consecutive, all success @ main). Node 20/22 matrix. sync-protocol workflow ready. |
 | 9 | DuckBrain | N/A | DuckBrain MCP connection unavailable — skipping (known transport issue). |
-| 10 | Quality | OK | tsc clean, 0 stubs, 8 exports from index.ts. Hilo=useful (51 edges, 25 files — flat library, expected topology). dist/ orphans are build artifacts. |
+| 10 | Quality | OK | tsc clean, 0 stubs, all exports from index.ts. Hilo=useful (51 edges, 25 files — flat library, expected topology). dist/ orphans are build artifacts. |
 | 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain intact. Examples import from individual modules. |
 
-### Status: 10/10 audit points clear (1 N/A). INFRA note resolved — tests now pass locally.
-### Genuinely idle: 4th consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
-### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200→14400 (4h, verified via GET)
-### Key finding: Tests now pass locally (was kernel-thread panic issue, now 281ms). All 91 tests green.
-### Action: Bump cooldown 7200 → 14400 (4h). Project is production-complete. Two trivial patch upgrades not worth a worker tick.
+### Status: 10/11 audit points clear (1 N/A). Tests pass locally (420ms, kernel issue resolved).
+### Genuinely idle: 6th+ consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks. 0 remote commits.
+### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 7200 (was 21600 — fleet TOML reverted again)
+### ⚠️ Cooldown reversion: Fleet TOML overwrites API-set cooldown. Was 21600 (6h) at tick #21, back to 7200 (2h).
+### Action: Bump cooldown 7200 → 14400 (4h). Two trivial patch upgrades not worth a worker tick. Project is production-complete.
 
 ## [x] Tick #11 — MAINT-02: Coverage reporting (2026-07-20 08:13Z)
 - [x] Install @vitest/coverage-v8@1 (vitest 1.6.x compatible)
