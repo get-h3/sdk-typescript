@@ -290,3 +290,29 @@ Foreman-direct evaluation of 5 major version bumps available via `npm outdated`:
 ### Scheduler: h3-sdk-typescript-foreman — Enabled: true. CooldownS: 1800→21600 (6h). 
 ### ⚠️ Cooldown reversion: Tick #18 claimed 28800 (8h) but actual was 1800 (30m). Fleet TOML overwrote. Now set to 21600 (6h) and verified.
 ### Commit: foreman-direct (board update + NEVER-DONE fix)
+
+## [x] Tick #21 — 11-point audit, genuinely idle (2026-07-22 00:23Z)
+
+### 11-Point Audit Results
+
+| # | Check | Result | Detail |
+|---|-------|--------|--------|
+| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator byte-identical to protocol.ts (verified this tick). Protocol repo: docs commits only. |
+| 2 | Docs | OK | README 226 lines, AGENTS.md configured |
+| 3 | Tests | **OK** *(was INFRA since tick #10)* | **91/91 tests pass LOCALLY (502ms).** Kernel 7.0.0 + rolldown thread pool panic RESOLVED. Coverage: 94.59%/75%/100%/94.54% (all above 50%). |
+| 4 | Deps | OK | 0 npm audit vulns. @hono/node-server 2.0.10→2.0.11 patch, prettier 3.9.5→3.9.6 patch (both trivial). TS 7.0 deferred (MAINT-03d). |
+| 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs (rg scan clean). No throw-errors in source files. Max file: 506 lines (test). Total: 2,255 lines. |
+| 6 | Performance | N/A | SDK library — no benchmarks expected |
+| 7 | Endpoints | N/A | SDK library — no runtime endpoints |
+| 8 | CI | OK | GitHub Actions green (3 consecutive). Node 20/22 matrix. sync-protocol workflow ready. |
+| 9 | DuckBrain | OK | coding-hermes namespace: 1 entry (tick-20). No new tasks. |
+| 10 | Quality | OK | tsc clean, 0 stubs, 7 exports from index.ts. Hilo=useful (51 edges, 25 files — flat library, expected topology). |
+| 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain intact. |
+
+### Status: 11/11 audit points clear. Tests now pass locally — INFRA resolved.
+### Genuinely idle: 5th+ consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
+### Scheduler: h3-sdk-typescript-foreman — Enabled: true, CooldownS: 1800→21600 (6h, verified via GET)
+### ⚠️ Cooldown reversion again: Tick #20 claimed 14400 (4h) but scheduler showed 1800 (30m). Fleet TOML overwrote.
+### Action: Bump cooldown 1800 → 21600 (6h). Two trivial patch upgrades not worth a worker tick. Project is production-complete.
+
+### Commit: foreman-direct (board update)
