@@ -117,32 +117,33 @@
 ### ⚠️ Cooldown reversion: Tick #26 claimed 43200. Actual was 7200 (Fleet TOML overwrote). **Now set to 43200 (12h) again and verified.**
 ### Action: Project is production-complete. Two trivial patch upgrades not worth a worker tick. MAINT-03d (TS 7.0) still deferred.
 
-## [x] Tick #28 — 12th+ consecutive idle tick (2026-07-23 08:19Z)
+## [x] Tick #29 — 13th+ consecutive idle tick (2026-07-23 12:20Z)
 
 ### 11-Point Audit Results
 
 | # | Check | Result | Detail |
 |---|-------|--------|--------|
-| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator byte-identical to protocol.ts (verified tick #14). Protocol repo: 5 commits (docs/ci only — no schema changes). |
+| 1 | Specs | OK | 15 JSON schemas (unchanged). Generator byte-identical (verified this tick). Protocol repo: 5 docs/ci commits only — no schema changes. |
 | 2 | Docs | OK | README 226 lines, AGENTS.md configured |
-| 3 | Tests | OK | **91/91 tests pass (441ms).** Coverage: 94.59%/75%/100%/94.54% (all above 50%). |
+| 3 | Tests | OK | **91/91 tests pass (422ms).** Coverage: 94.59%/75%/100%/94.54% (all above 50%). |
 | 4 | Deps | OK | 0 npm audit vulns. @hono/node-server 2.0.10→2.0.11 patch, prettier 3.9.5→3.9.6 patch (both trivial, not worth worker). TS 7.0 deferred (MAINT-03d). |
 | 5 | Pitfalls | OK | No stubs/TODOs/FIXMEs. Git status clean. Max file: 616 lines (generate-schemas.ts). Total: 2,757 lines. |
 | 6 | Performance | N/A | SDK library — no benchmarks expected |
 | 7 | Endpoints | N/A | SDK library — no runtime endpoints |
-| 8 | CI | OK | GitHub Actions: last 5 runs all success (Node 20/22 matrix). |
-| 9 | DuckBrain | OK | h3-sdk-typescript namespace: sparse entries (tick-23, ticks-20/21). No new tasks. |
-| 10 | Quality | OK | tsc --noEmit clean. Hilo=useful (51 edges, 25 files — flat library, expected topology). 10 dist/ orphans (build artifacts, harmless). |
+| 8 | CI | OK | GitHub Actions: last 5 runs all success (Node 20/22 matrix). No remote commits. |
+| 9 | DuckBrain | OK | h3-sdk-typescript namespace: 4 keys (tick-20/21/23/status/idle-ticks). No new tasks. |
+| 10 | Quality | OK | tsc --noEmit clean. Hilo=useful (51 edges, 25 files — flat library, expected topology). |
 | 11 | Middle-out | OK | All 5 source modules exported through index.ts. Generator→protocol.ts chain intact. |
 
-### Status: 11/11 audit points clear. 0 N/A. All gaps closed since tick #21 (kernel issue resolved).
-### Genuinely idle: 12th+ consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
-### Scheduler: h3-sdk-typescript-foreman — **Enabled: true, CooldownS: 7200→43200 (12h, verified via GET)**
-### ⚠️ Cooldown reversion AGAIN: Tick #27 set 43200 but Fleet TOML `ApplyFleetConfig` upsert overwrote to 7200 on restart. Reset to 43200 (12h) and verified.
-### Action: Project is production-complete. Two trivial patch upgrades not worth a worker tick. MAINT-03d (TS 7.0) still deferred. Escalating: cooldown keeps reverting on scheduler restart — Fleet TOML needs updating or cooldown override persistence fix.
+### Status: 11/11 audit points clear. 0 N/A. All gaps closed.
+### Genuinely idle: 13th+ consecutive idle tick. 15 schema files, protocol.ts in sync. 0 vulns. 0 DuckBrain tasks.
+### Scheduler: h3-sdk-typescript-foreman — **Enabled: true, CooldownS: 7200→43200 (12h, verified via PUT)**
+### ⚠️ Cooldown reversion (5th occurrence): Tick #28 set 43200 but Fleet TOML `ApplyFleetConfig` upsert overwrote to 7200 on daemon restart. This is the 5th consecutive reversion since tick #19. Reset to 43200 (12h) via PUT. PUT response confirmed: `"CooldownS":43200`.
+### Action: Project is production-complete. Two trivial patch upgrades not worth a worker tick. MAINT-03d (TS 7.0) deferred. Cooldown reversion is a known Fleet TOML issue — scheduler daemon `ApplyFleetConfig` upsert overwrites API-set values on every restart.
 
 ### Commit: foreman-direct (board update)
 
+### Remaining Maintenance Items
 ## [x] Tick #24 — 11-point audit, host resource pressure (2026-07-22 13:06Z)
 
 - [x] Scheduler: Enabled=true, CooldownS=1800→43200 (12h, verified via GET)
