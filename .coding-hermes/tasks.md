@@ -1,33 +1,8 @@
-<!--
-  ⚠️  BOARD FORMAT — coding-hermes-model-router v1.3 (2026-07-24)
-  All tasks MUST use matrix format: | ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback |
-  Before editing this file, load the skill: skill_view(name='coding-hermes-model-router')
-  Validate: python3 ~/.hermes/scripts/validate-board-format.py .coding-hermes/tasks.md
-- [x] **GITREINS-JUDGE — Configure LLM evaluator for commit quality review**
-  | 🔴 Critical | — | — | deepseek-v4-flash @ deepseek-foreman | GITREINS_LLM_API_KEY in ~/.hermes/.env | foreman-direct |
-
-  Run: `python3 ~/.hermes/scripts/check-gitreins-judge.py .` to verify.
-  Default limits (adjust per-project based on codebase size and task complexity):
-  - Fast/small projects: `max_iterations: 50`, `max_time: 10m`, tokens: `0.2M/0.4M`
-  - Large repos (Go monorepos, 100+ files): `max_iterations: 100`, `max_time: 30m`, tokens: `1M/2M`
-  - C++/Rust (slow compiles): `max_time: 30m` minimum
-  - Scheduler/production infra: `max_time: 30m`, tokens: `1M/2M`
-  Supervisor auto-flags projects where limits are too low for codebase size.
-
-| 🔴 Critical | — | — | deepseek-v4-flash @ deepseek-foreman | GITREINS_LLM_API_KEY in ~/.hermes/.env | foreman-direct |
-
-  Run: `python3 ~/.hermes/scripts/check-gitreins-judge.py .` to verify.
-  If missing, create/edit .gitreins/config.yaml with evaluator section using deepseek-v4-flash.
-  This is CRITICAL for code quality — no automated review of worker output without it.
-
-  NEVER remove the matrix header row or NEVER-DONE / E2E-001 fixtures.
--->
-
 # H3 SDK TypeScript — Model Router Task Matrix
 
 > **Core purpose:** TypeScript SDK for the H3 protocol — Zod schemas, Hono router harness interface, test bed (MockHermes), examples, protocol schema sync generator.
-> **Language:** TypeScript | **Tests:** 134/134 pass | **Build:** tsc clean | **Coverage:** 94.59%/75%/100%/94.54% | **Status:** Production-complete, 37th+ consecutive idle tick
-> **Tick #41 (2026-07-26):** Idle tick — all gates clear. Tests 134/134 ✅, tsc clean ✅, coverage 94.59% ✅, CI ✅ (last 3 green), GitReins guard PASS ✅ (flattened config + tier2 stage added by kara 18m ago), npm audit 0 vulns ✅, Hilo=useful (66 edges/26 files). Deps: TS 5.9.3→7.0.2 deferred (MAINT-03d). DuckBrain MCP flaky (known). Git clean, no TODO/FIXME/HACK. Worker dispatch: none (no actionable tasks). Spec gap (langgraph-agent.ts) still very low priority.
+> **Language:** TypeScript | **Tests:** 134/134 pass | **Build:** tsc clean | **Coverage:** 94.59%/75%/100%/94.54% | **Status:** Production-complete, 38th+ consecutive idle tick
+> **Tick #42 (2026-07-26):** Idle tick — all gates clear. Tests 134/134 ✅, tsc clean ✅, coverage 94.59% ✅, CI ✅ (last 3 green), GitReins guard PASS ✅ (flattened config + tier2 stage — working), npm audit 0 vulns ✅, Hilo=useful (58 edges/26 files). Deps: TS 5.9.3→7.0.2 deferred (MAINT-03d). DuckBrain MCP flaky (known — namespace exists, connection drops). Git clean, no TODO/FIXME. Worker dispatch: none (no actionable tasks, never-done audit shows no gaps).
 
 ```
 ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
