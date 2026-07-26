@@ -14,10 +14,20 @@ jobs:
         node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: sdk-typescript
+      - uses: actions/checkout@v4
+        with:
+          repository: get-h3/protocol
+          path: protocol
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
+          cache-dependency-path: sdk-typescript/package-lock.json
       - run: npm ci
+        working-directory: sdk-typescript
       - run: npx tsc --noEmit
+        working-directory: sdk-typescript
       - run: npx vitest run
+        working-directory: sdk-typescript
