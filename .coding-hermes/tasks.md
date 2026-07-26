@@ -3,7 +3,7 @@
   All tasks MUST use matrix format: | ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback |
   Before editing this file, load the skill: skill_view(name='coding-hermes-model-router')
   Validate: python3 ~/.hermes/scripts/validate-board-format.py .coding-hermes/tasks.md
-- [ ] **GITREINS-JUDGE — Configure LLM evaluator for commit quality review**
+- [x] **GITREINS-JUDGE — Configure LLM evaluator for commit quality review**
   | 🔴 Critical | — | — | deepseek-v4-flash @ deepseek-foreman | GITREINS_LLM_API_KEY in ~/.hermes/.env | foreman-direct |
 
   Run: `python3 ~/.hermes/scripts/check-gitreins-judge.py .` to verify.
@@ -26,7 +26,8 @@
 # H3 SDK TypeScript — Model Router Task Matrix
 
 > **Core purpose:** TypeScript SDK for the H3 protocol — Zod schemas, Hono router harness interface, test bed (MockHermes), examples, protocol schema sync generator.
-> **Language:** TypeScript | **Tests:** 91/91 pass | **Build:** tsc clean | **Coverage:** 94.59%/75%/100%/94.54% | **Status:** Production-complete, 20th+ consecutive idle tick
+> **Language:** TypeScript | **Tests:** 134/134 pass | **Build:** tsc clean | **Coverage:** 94.59%/75%/100%/94.54% | **Status:** Production-complete, 37th+ consecutive idle tick
+> **Tick #37+ (2026-07-26):** Fixed CI (checkout get-h3/protocol for schema-validation tests). Cleaned 3 stale stashes. Verified GITREINS-JUDGE ✅. Populated DuckBrain.
 
 ```
 ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
