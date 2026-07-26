@@ -27,7 +27,7 @@
 
 > **Core purpose:** TypeScript SDK for the H3 protocol — Zod schemas, Hono router harness interface, test bed (MockHermes), examples, protocol schema sync generator.
 > **Language:** TypeScript | **Tests:** 134/134 pass | **Build:** tsc clean | **Coverage:** 94.59%/75%/100%/94.54% | **Status:** Production-complete, 37th+ consecutive idle tick
-> **Tick #39 (2026-07-26):** Idle — all gates clear (verified tick #39). Tests 134/134 ✅, tsc clean ✅, coverage 94.59% ✅, CI ✅ (last 3 green), GitReins guard PASS ✅, npm audit 0 vulns ✅, Hilo=useful (58 edges/26 files). Deps: typescript 5.9.3→7.0.2 deferred (MAINT-03d). DuckBrain namespace `h3-sdk-typescript` exists (MCP flaky — known). Cooldown 1800s (known COOLDOWN-REVERSION). Git clean, no TODO/FIXME/HACK. NEVER-DONE audit fresh.
+> **Tick #40 (2026-07-26):** NEVER-DONE audit complete. All gates clear: Tests 134/134 ✅, tsc clean ✅, coverage 94.59% ✅, CI ✅ (last 3 green), GitReins guard PASS ✅, npm audit 0 vulns ✅, Hilo=useful (58 edges/26 files). Deps: typescript 5.9.3→7.0.2 deferred (MAINT-03d). DuckBrain MCP flaky (known). Git clean, no TODO/FIXME/HACK. **Spec gap found:** langgraph-agent.ts example missing per spec §4.1 (very low priority).
 
 ```
 ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
