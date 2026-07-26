@@ -51,14 +51,32 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const SCHEMA_DIR = resolve(__dirname, "..", "..", "..", "protocol", "schemas", "v1");
+const SCHEMA_DIR = resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "protocol",
+  "schemas",
+  "v1",
+);
 
 const ALL_SCHEMAS = [
-  "cancel-request.json", "common.json", "decision.json",
-  "delegate.json", "end.json", "error-response.json", "health-response.json",
-  "llm-call.json", "process-request.json", "result-request.json",
-  "session-response.json", "test-report.json", "text-response.json",
-  "tool-call.json", "wait.json",
+  "cancel-request.json",
+  "common.json",
+  "decision.json",
+  "delegate.json",
+  "end.json",
+  "error-response.json",
+  "health-response.json",
+  "llm-call.json",
+  "process-request.json",
+  "result-request.json",
+  "session-response.json",
+  "test-report.json",
+  "text-response.json",
+  "tool-call.json",
+  "wait.json",
 ];
 
 function loadSchema(name: string): Record<string, unknown> {
@@ -89,7 +107,11 @@ function validateAgainstSchema(instance: object, schemaName: string): void {
         if (existsSync(path)) {
           const s = JSON.parse(readFileSync(path, "utf-8"));
           // $id might collide; use anonymous schema registration
-          try { ajv.addSchema(s); } catch { /* already added */ }
+          try {
+            ajv.addSchema(s);
+          } catch {
+            /* already added */
+          }
         }
       }
     }
@@ -225,7 +247,11 @@ describe("QV-SDK-04: Decision types validate against JSON Schema", () => {
     const d = DecisionSchema.parse({
       decision: "tool_call" as const,
       history: [],
-      tool_call: { name: "search", params: { q: "cats" }, reasoning: "need info" },
+      tool_call: {
+        name: "search",
+        params: { q: "cats" },
+        reasoning: "need info",
+      },
     });
     validateAgainstSchema(d as object, "decision.json");
   });
@@ -274,7 +300,11 @@ describe("QV-SDK-04: Decision types validate against JSON Schema", () => {
 
 describe("QV-SDK-04: Payload sub-types validate against JSON Schema", () => {
   it("tool_call validates against schema", () => {
-    const tc = ToolCallSchema.parse({ name: "search", params: { q: "cats" }, reasoning: "need info" });
+    const tc = ToolCallSchema.parse({
+      name: "search",
+      params: { q: "cats" },
+      reasoning: "need info",
+    });
     validateAgainstSchema(tc as object, "tool-call.json");
   });
 
@@ -293,22 +323,34 @@ describe("QV-SDK-04: Payload sub-types validate against JSON Schema", () => {
   });
 
   it("text_response unfinished validates against schema", () => {
-    const tr = TextResponseSchema.parse({ content: "Streaming...", finished: false });
+    const tr = TextResponseSchema.parse({
+      content: "Streaming...",
+      finished: false,
+    });
     validateAgainstSchema(tr as object, "text-response.json");
   });
 
   it("wait validates against schema", () => {
-    const w = WaitSchema.parse({ reason: "awaiting input", duration_seconds: 30 });
+    const w = WaitSchema.parse({
+      reason: "awaiting input",
+      duration_seconds: 30,
+    });
     validateAgainstSchema(w as object, "wait.json");
   });
 
   it("delegate validates against schema", () => {
-    const d = DelegateSchema.parse({ task: "review code", agent: "code-reviewer" });
+    const d = DelegateSchema.parse({
+      task: "review code",
+      agent: "code-reviewer",
+    });
     validateAgainstSchema(d as object, "delegate.json");
   });
 
   it("end validates against schema", () => {
-    const e = EndSchema.parse({ reason: "task_complete", summary: "All done!" });
+    const e = EndSchema.parse({
+      reason: "task_complete",
+      summary: "All done!",
+    });
     validateAgainstSchema(e as object, "end.json");
   });
 });
@@ -327,13 +369,23 @@ describe("QV-SDK-04: Required fields enforced", () => {
   });
 
   it("identity allows missing user_name (optional, gets default)", () => {
-    const ident = IdentitySchema.parse({ platform: "t", chat_id: "c", user_id: "u", user_name: "unknown" });
+    const ident = IdentitySchema.parse({
+      platform: "t",
+      chat_id: "c",
+      user_id: "u",
+      user_name: "unknown",
+    });
     expect(ident.platform).toBe("t");
     expect(ident.user_name).toBe("unknown");
   });
 
   it("identity allows missing user_id (optional, gets default)", () => {
-    const ident = IdentitySchema.parse({ platform: "t", chat_id: "c", user_name: "n", user_id: "unknown" });
+    const ident = IdentitySchema.parse({
+      platform: "t",
+      chat_id: "c",
+      user_name: "n",
+      user_id: "unknown",
+    });
     expect(ident.platform).toBe("t");
     expect(ident.user_name).toBe("n");
     expect(ident.user_id).toBe("unknown");
@@ -371,15 +423,11 @@ describe("QV-SDK-04: Required fields enforced", () => {
   });
 
   it("cancel request rejects missing reason", () => {
-    expect(() =>
-      CancelRequestSchema.parse({ session_id: "s-1" }),
-    ).toThrow();
+    expect(() => CancelRequestSchema.parse({ session_id: "s-1" })).toThrow();
   });
 
   it("health response rejects missing status", () => {
-    expect(() =>
-      HealthResponseSchema.parse({ version: "1.0" }),
-    ).toThrow();
+    expect(() => HealthResponseSchema.parse({ version: "1.0" })).toThrow();
   });
 
   it("session response rejects missing status", () => {
@@ -399,49 +447,67 @@ describe("QV-SDK-04: Required fields enforced", () => {
 describe("QV-SDK-04: Enums match JSON Schema", () => {
   it("DecisionType enum matches schema", () => {
     const schema = loadSchema("decision.json");
-    const schemaValues = new Set((schema as any).properties.decision.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.decision.enum as string[],
+    );
     expect(new Set(Object.keys(DecisionTypeSchema.enum))).toEqual(schemaValues);
   });
 
   it("EndReason enum matches schema", () => {
     const schema = loadSchema("end.json");
-    const schemaValues = new Set((schema as any).properties.reason.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.reason.enum as string[],
+    );
     expect(new Set(Object.keys(EndReasonSchema.enum))).toEqual(schemaValues);
   });
 
   it("HealthStatus enum matches schema", () => {
     const schema = loadSchema("health-response.json");
-    const schemaValues = new Set((schema as any).properties.status.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.status.enum as string[],
+    );
     expect(new Set(Object.keys(HealthStatusSchema.enum))).toEqual(schemaValues);
   });
 
   it("CancelReason enum matches schema", () => {
     const schema = loadSchema("cancel-request.json");
-    const schemaValues = new Set((schema as any).properties.reason.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.reason.enum as string[],
+    );
     expect(new Set(Object.keys(CancelReasonSchema.enum))).toEqual(schemaValues);
   });
 
   it("ResultType enum matches schema", () => {
     const schema = loadSchema("result-request.json");
-    const schemaValues = new Set((schema as any).properties.result.properties.type.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.result.properties.type.enum as string[],
+    );
     expect(new Set(Object.keys(ResultTypeSchema.enum))).toEqual(schemaValues);
   });
 
   it("ErrorCode enum matches schema", () => {
     const schema = loadSchema("error-response.json");
-    const schemaValues = new Set((schema as any).properties.error.properties.code.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.error.properties.code.enum as string[],
+    );
     expect(new Set(Object.keys(ErrorCodeSchema.enum))).toEqual(schemaValues);
   });
 
   it("SessionStatus enum matches schema", () => {
     const schema = loadSchema("session-response.json");
-    const schemaValues = new Set((schema as any).properties.status.enum as string[]);
-    expect(new Set(Object.keys(SessionStatusSchema.enum))).toEqual(schemaValues);
+    const schemaValues = new Set(
+      (schema as any).properties.status.enum as string[],
+    );
+    expect(new Set(Object.keys(SessionStatusSchema.enum))).toEqual(
+      schemaValues,
+    );
   });
 
   it("Capability enum matches schema", () => {
     const schema = loadSchema("health-response.json");
-    const schemaValues = new Set((schema as any).properties.capabilities.items.enum as string[]);
+    const schemaValues = new Set(
+      (schema as any).properties.capabilities.items.enum as string[],
+    );
     expect(new Set(Object.keys(CapabilitySchema.enum))).toEqual(schemaValues);
   });
 });
@@ -450,7 +516,9 @@ describe("QV-SDK-04: Enums match JSON Schema", () => {
 
 describe("QV-SDK-04: Numeric constraints enforced by Zod", () => {
   it("config timeout_seconds >= 1", () => {
-    expect(() => ConfigSchema.parse({ max_iterations: 10, timeout_seconds: 0 })).toThrow();
+    expect(() =>
+      ConfigSchema.parse({ max_iterations: 10, timeout_seconds: 0 }),
+    ).toThrow();
   });
 
   it("config max_iterations >= 1", () => {
@@ -458,7 +526,9 @@ describe("QV-SDK-04: Numeric constraints enforced by Zod", () => {
   });
 
   it("wait duration_seconds >= 1", () => {
-    expect(() => WaitSchema.parse({ reason: "x", duration_seconds: 0 })).toThrow();
+    expect(() =>
+      WaitSchema.parse({ reason: "x", duration_seconds: 0 }),
+    ).toThrow();
   });
 
   it("llm_call temperature 0.0-2.0", () => {
@@ -473,7 +543,11 @@ describe("QV-SDK-04: Numeric constraints enforced by Zod", () => {
 
   it("result payload duration_ms >= 0", () => {
     expect(() =>
-      ResultPayloadSchema.parse({ type: "tool_result", success: true, duration_ms: -1 }),
+      ResultPayloadSchema.parse({
+        type: "tool_result",
+        success: true,
+        duration_ms: -1,
+      }),
     ).toThrow();
   });
 });
