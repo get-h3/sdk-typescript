@@ -57,3 +57,10 @@
 {"from":"examples/echo/index.ts","to":"pkg:@hono/node-server","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"examples/echo/index.ts","to":"local:../../src/index.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"examples/echo/index.ts","to":"local:../../src/index.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:vitest","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:fs","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:path","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:url","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:ajv","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"pkg:ajv-formats","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"src/__tests__/schema-validation.test.ts","to":"local:../protocol.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
