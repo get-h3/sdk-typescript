@@ -9,3 +9,5 @@ coverage/
 .vfs/graph/.last_warm
 .gitreins/tasks.yaml
 .schemas-changed
+pnpm-lock.yaml
+pnpm-workspace.yaml
