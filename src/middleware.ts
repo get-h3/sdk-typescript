@@ -22,17 +22,18 @@ import { createMiddleware } from "hono/factory";
 export const requestLogger = createMiddleware(
   async (c: Context, next: Next) => {
     const start = performance.now();
+    const ts = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     try {
       await next();
       const elapsed = Math.round(performance.now() - start);
       console.info(
-        `${c.req.method} ${c.req.path} → ${c.res.status} (${elapsed}ms)`,
+        `[${ts}] ${c.req.method} ${c.req.path} ${c.res.status} ${elapsed}ms`,
       );
     } catch (err) {
       const elapsed = Math.round(performance.now() - start);
       const message = err instanceof Error ? err.message : String(err);
       console.error(
-        `${c.req.method} ${c.req.path} → 500 (${elapsed}ms) — ${message}`,
+        `[${ts}] ${c.req.method} ${c.req.path} 500 ${elapsed}ms \u2014 ${message}`,
       );
       return c.json(
         {
