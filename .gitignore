@@ -11,3 +11,4 @@ coverage/
 .schemas-changed
 pnpm-lock.yaml
 pnpm-workspace.yaml
+.coding-hermes/board/board.db
