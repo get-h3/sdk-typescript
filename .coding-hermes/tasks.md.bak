@@ -13,14 +13,14 @@ ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
 | ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback |
 |----|------|-----|-----|------|------|-------|-----------|----------|
 | INIT | ✅ Verify project structure, dependencies, and DuckBrain namespace | DONE | 1 | — | infra,init | DeepSeek V4 Flash | ✅ Done | — |
-| SPEC | ✅ Full SDK implementation per spec §4 — 11 files, +858/-9 (protocol.ts, harness.ts, middleware.ts, testbed.ts, examples/) | DONE | 5 | — | spec,implementation | DeepSeek V4 Pro | ✅ Done (8048423) | — |
+| SPEC | ✅ Full SDK implementation per spec §4 — 11 files, +858/-9 (protocol.ts, harness.ts, middleware.ts, testbed.ts, examples/) | DONE | 5 | — | spec,implementation | deepseek-v4-flash | ✅ Done (8048423) | — |
 | DOC | ✅ Generate/update SDK documentation — README.md (226 lines), LICENSE, package-lock.json | DONE | 2 | — | documentation | GPT-5.6 Terra | ✅ Done (eb8fff4) | — |
 | TEST | ✅ Test coverage for all 5 source modules — 90 tests across 5 files, all passing | DONE | 3 | — | testing | Step 3.7 Flash | ✅ Done | — |
 | CI | ✅ Verify CI pipeline health — GitHub Actions with Node 20/22 matrix | DONE | 2 | — | ci | DeepSeek V4 Flash | ✅ Done | — |
 | E2E | ✅ h3-test compliance battery (43/43 passes) — 6 Zod schema fixes, session tracking, context echo, echo harness streaming | DONE | 4 | — | e2e,compliance | GPT-5.6 Luna | ✅ Done (06283ea) | — |
-| P5-04 | ✅ Sync-protocol workflow: regenerate → test → release. JSON Schema → Zod TypeScript generator, CI pipeline with schema alignment check. | DONE | 4 | — | sync,ci,generator | DeepSeek V4 Pro | ✅ Done | — |
-| P5-05 | ✅ Generator fidelity: reconcile generate-schemas.ts output with hand-written protocol.ts. Added FIELD_OVERRIDES, fixed integer/number handling, CI verified deterministic. | DONE | 3 | — | sync,generator,fidelity | DeepSeek V4 Pro | ✅ Done (18808b6) | — |
-| MAINT-01 | ✅ Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat | DONE | 3 | — | deps,security,upgrade | DeepSeek V4 Pro | ✅ Done (b8b4a13) — gpt-5.6-sol | — |
+| P5-04 | ✅ Sync-protocol workflow: regenerate → test → release. JSON Schema → Zod TypeScript generator, CI pipeline with schema alignment check. | DONE | 4 | — | sync,ci,generator | deepseek-v4-flash | ✅ Done | — |
+| P5-05 | ✅ Generator fidelity: reconcile generate-schemas.ts output with hand-written protocol.ts. Added FIELD_OVERRIDES, fixed integer/number handling, CI verified deterministic. | DONE | 3 | — | sync,generator,fidelity | deepseek-v4-flash | ✅ Done (18808b6) | — |
+| MAINT-01 | ✅ Upgrade vitest 1.6 → 3.2.6+ to resolve critical CVSS 9.8 + kernel 7.0.0 compat | DONE | 3 | — | deps,security,upgrade | deepseek-v4-flash | ✅ Done (b8b4a13) — gpt-5.6-sol | — |
 | MAINT-02 | ✅ Coverage reporting — @vitest/coverage-v8, thresholds 50%. Coverage: 94.59%/75%/100%/94.54%. | DONE | 2 | — | testing,coverage | DeepSeek V4 Flash | ✅ Done (cf4b8e1) | — |
 | MAINT-03a | ✅ Upgrade zod 3.25→4.4 — migrate `z.string().uuid()`→`z.uuid()`, 91/91 tests pass | DONE | 2 | — | deps,zod,upgrade | DeepSeek V4 Flash | ✅ Done | — |
 | MAINT-03b | ✅ Upgrade vitest + @vitest/coverage-v8 3.2.7→4.1.10 — config compatible as-is, 91/91 tests | DONE | 2 | — | deps,vitest,upgrade | DeepSeek V4 Flash | ✅ Done (868fef9) | — |
@@ -31,6 +31,7 @@ ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
 
 | ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback |
 |----|------|-----|-----|------|------|-------|-----------|----------|
+|| BOARD-V2 | 🟡 MIGRATE BOARD TO DUCKDB v2.1 — run `python3 ~/.hermes/scripts/migrate-board-to-duckdb.py .` (load skill coding-hermes-board first). Creates .coding-hermes/board/ (schema.sql, tasks.parquet, events.parquet), archives tasks.md → tasks.md.bak, commit. Same pattern as DuckBrain. | P1 | 3 | — | duckdb,board,migration | deepseek-v4-flash | Run migration script, verify Parquet, commit board | deepseek-v4-flash |
 | MAINT-03d | TypeScript 7.0 upgrade — DEFERRED. Go-based native compiler (`tsgo`). Risk of subtle type inference differences, declaration emit changes, ecosystem immaturity too high for stable SDK. Monitor TS 7.1+ release. | LOW | 1 | — | deps,typescript,deferred | DeepSeek V4 Flash | Simple: deferred, monitoring only | — |
 
 ## Known Issues
@@ -44,7 +45,7 @@ ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
 
 | ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback |
 |----|------|-----|-----|------|------|-------|-----------|----------|
-| NEVER-DONE | 11-point audit: spec alignment, doc coverage, test gaps, package upgrades, pitfall hunt, performance audit, endpoint verification, CI/CD health, DuckBrain sync, code quality, middle-out wiring. Run every 3-4 ticks. | LOW | 3 | — | audit,quality | DeepSeek V4 Pro | Architecture-level project audit across all subsystems | GLM-5.2 |
+| NEVER-DONE | 11-point audit: spec alignment, doc coverage, test gaps, package upgrades, pitfall hunt, performance audit, endpoint verification, CI/CD health, DuckBrain sync, code quality, middle-out wiring. Run every 3-4 ticks. | LOW | 3 | — | audit,quality | deepseek-v4-flash | Architecture-level project audit across all subsystems | GLM-5.2 |
 
 - [ ] **E2E-001 — E2E Testing Tick (self-improving loop)** | Recurring every 5-10 ticks | — | — | Luna (browser/screenshots) or Step 3.7 Flash (CLI/API) | foreman-direct | — | —
 **Tick #55 (2026-07-30 20:30 UTC):** Idle tick #49 — all gates green. Tests 134/134 ✅, tsc clean ✅, coverage 94.64%/75%/100%/94.59% ✅, npm audit 0 vulns (107 deps) ✅, Hilo=useful (58 edges/26 files) ✅. GitReins: P5-04 complete (sole task, no pending). Prettier clean. Depcheck clean. Scheduler: Cooldown=43200s, Enabled=1 confirmed via DB query. DuckBrain: 0 keys — prior board claim of 16 was stale; namespace genuinely empty. Generator: raw output differs from committed (2-space vs 4-space indent) but prettier-normalized pipeline produces byte-identical output — idempotent ✅. TS 7.0 deferred (MAINT-03d). E2E overdue by 20 ticks (last run tick #35) — zero code changes in 29 ticks, cosmetic. Board corrections: Hilo 66→58 (stale since tick #52), DuckBrain 16→0 (stale since never verified). No new gaps — 49th consecutive idle tick.
@@ -68,3 +69,4 @@ ID | Task | Pri | Cpx | Deps | Tags | Model | Reasoning | Fallback
 | DuckBrain | ⚠️ 18 keys (board correction: not 0) |
 
 External signals: no new issues, no new PRs, no new remote commits. Deps: hono 4.12.33 patch available (non-critical, 0 vulns — monitoring only); TypeScript 7.0.2 latest (MAINT-03d still deferred — monitoring only). E2E-001 still overdue (last run tick #35) but zero code changes in 30+ ticks — cosmetic, no worker spawn warranted. Known issues GITREINS-FALSE-NEG + COOLDOWN-REVERSION unchanged (no reversion this tick: 43200s intact). Cooldown at max 12h — matching established self-pause track. No new tasks created. Idle counter: 50.
+
