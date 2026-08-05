@@ -13,29 +13,50 @@ bun add @get-h3/h3-harness-sdk
 ## Quickstart
 
 ```typescript
-import { Hono } from 'hono';
-import { Harness, Decision, DecisionType, createH3Router } from '@get-h3/h3-harness-sdk';
+import { Hono } from "hono";
+import {
+  createH3Router,
+  type Harness,
+  type Decision,
+} from "@get-h3/h3-harness-sdk";
 
 class MyHarness implements Harness {
-  async onProcess(req) {
+  async onProcess(): Promise<Decision> {
     return {
-      decision: DecisionType.TEXT,
+      decision: "text",
       decision_id: crypto.randomUUID(),
-      text: { content: 'Hello from TypeScript!', finished: true },
+      text: { content: "Hello from TypeScript!", finished: true },
     };
   }
-  async onResult(req) {
-    return { decision: DecisionType.END, decision_id: crypto.randomUUID(), end: { reason: 'task_complete' } };
+  async onResult(): Promise<Decision> {
+    return {
+      decision: "end",
+      decision_id: crypto.randomUUID(),
+      end: { reason: "task_complete" },
+    };
   }
   health() {
-    return { status: 'ok', version: '1.0.0', transport: 'rest', protocol_version: '1.0', capabilities: ['text', 'end'] };
+    return {
+      status: "ok",
+      version: "1.0.0",
+      transport: "rest",
+      protocol_version: "1.0",
+      capabilities: ["text", "end"],
+    };
   }
 }
 
 const app = new Hono();
-app.route('/', createH3Router(new MyHarness()));
+app.route("/", createH3Router(new MyHarness()));
 export default app;
 ```
+
+> **Type-only exports:** enum-like names such as `DecisionType` are exported as
+> TypeScript types only (runtime validation happens via the companion Zod
+> schemas, e.g. `DecisionTypeSchema`). Use the string literals shown above
+> (`'text'`, `'end'`) in decision payloads — importing `DecisionType` as a
+> value throws a SyntaxError at module load. See `src/examples/echo.ts` for
+> the battery-passing pattern.
 
 ## Package Structure
 
