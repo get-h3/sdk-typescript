@@ -305,6 +305,40 @@ const next = await mock.sendResult({
 const cancelled = await mock.cancel();
 ```
 
+**⚠️ Session state footgun:** `sendMessage`, `sendResult`, and `cancel` accept an
+optional `sessionId` — if you omit it, a **fresh random UUID is generated for
+every call**. Harnesses that keep state keyed on `session_id` (via
+`context.session_state`) would silently see a NEW session on each call, losing
+their state and producing wrong decisions.
+
+**Thread the same session id across the calls of one conversation:**
+
+```typescript
+const sessionId = crypto.randomUUID();
+
+// Turn 1 — the harness records session_state for `sessionId`
+const decision = await mock.sendMessage('Do something', sessionId);
+
+// Turn 2 — same session id → the harness sees the state from turn 1
+const next = await mock.sendResult(
+  {
+    type: 'tool_result',
+    tool_name: 'read_file',
+    data: { content: 'file contents' },
+    duration_ms: 42,
+    success: true,
+  },
+  sessionId,
+);
+
+// Cancel — same session id, so the harness resolves the right session
+const cancelled = await mock.cancel(sessionId);
+```
+
+`sendResult` also takes an optional third argument `decisionId` (omitted above —
+a UUID is auto-generated then, which is fine unless the harness matches on
+`decision_id`).
+
 ## Examples
 
 ### Minimal Harness
