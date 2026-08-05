@@ -209,9 +209,23 @@ describe("Testbed exports", () => {
 });
 
 describe("Type exports", () => {
-  it("type exports exist (compile-time check — value at runtime)", () => {
-    // Type-only exports are erased at runtime, but we check that
-    // the module loaded successfully and the constants exist.
-    expect(true).toBe(true);
+  it("runtime enum schemas back the exported types (GAP-010)", () => {
+    // Type-only exports are erased at runtime, but the enum SCHEMAS they
+    // are inferred from must be live values with the full value set.
+    expect(DecisionTypeSchema.enum.text).toBe("text");
+    expect(DecisionTypeSchema.enum.tool_call).toBe("tool_call");
+    expect(DecisionTypeSchema.enum.llm_call).toBe("llm_call");
+    expect(DecisionTypeSchema.enum.end).toBe("end");
+  });
+
+  it("DecisionSchema is defined and validates real decisions", () => {
+    expect(DecisionSchema).toBeDefined();
+    expect(typeof DecisionSchema.parse).toBe("function");
+    const result = DecisionSchema.parse({
+      decision: "text",
+      decision_id: "00000000-0000-4000-8000-000000000001",
+      text: { content: "hi", finished: true },
+    });
+    expect(result.decision).toBe("text");
   });
 });

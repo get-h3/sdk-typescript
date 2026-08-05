@@ -348,11 +348,11 @@ export const DecisionSchema = z.object({
   decision: DecisionTypeSchema,
   decision_id: z.uuid().default(() => crypto.randomUUID()),
   history: z.array(HistoryEntrySchema).default([]),
-  tool_call: z.any().optional(),
-  llm_call: z.any().optional(),
-  text: z.any().optional(),
-  wait: z.any().optional(),
-  delegate: z.any().optional(),
-  end: z.any().optional(),
+  tool_call: ToolCallSchema.optional(),
+  llm_call: LLMCallSchema.optional(),
+  text: TextResponseSchema.optional(),
+  wait: WaitSchema.optional(),
+  delegate: DelegateSchema.optional(),
+  end: EndSchema.optional(),
 });
 export type Decision = z.infer<typeof DecisionSchema>;

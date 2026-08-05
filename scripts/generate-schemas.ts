@@ -392,6 +392,18 @@ function generate(files: SchemaFile[], protocolDir: string): string {
     }
   }
 
+  // Register top-level schema files as definitions too. The decision
+  // sub-schema files (tool-call.json, llm-call.json, ...) have NO
+  // `definitions` wrapper — each file IS the definition. Without this,
+  // $refs like "#/definitions/ToolCall" fail to resolve and fall back
+  // to z.any(), silently disabling validation on every decision payload.
+  for (const f of files) {
+    const info = FILE_NAMES[f.basename];
+    if (info?.name && f.schema.type === "object") {
+      resolver.registerDef(info.name, f.schema);
+    }
+  }
+
   // Register inline enums from file properties (handles dot-separated nested paths)
   for (const f of files) {
     const info = FILE_NAMES[f.basename];

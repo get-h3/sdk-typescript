@@ -503,4 +503,27 @@ describe("DecisionSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("rejects malformed payloads inside decision sub-schemas (GAP-009)", () => {
+    // Regression: decision sub-fields used to be z.any() — payloads with
+    // wrong-shaped content parsed silently. Now they validate against the
+    // real sub-schemas (ToolCallSchema, TextResponseSchema, ...).
+    expect(() =>
+      DecisionSchema.parse({
+        decision: "text",
+        decision_id: "00000000-0000-4000-8000-000000000001",
+        text: { content: 123, finished: "yes" },
+      }),
+    ).toThrow();
+  });
+
+  it("still parses valid text payloads after sub-schema wiring (GAP-009)", () => {
+    const result = DecisionSchema.parse({
+      decision: "text",
+      decision_id: "00000000-0000-4000-8000-000000000001",
+      text: { content: "x", finished: false },
+    });
+    expect(result.text?.content).toBe("x");
+    expect(result.text?.finished).toBe(false);
+  });
 });
