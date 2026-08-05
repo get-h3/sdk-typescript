@@ -2,14 +2,38 @@
 
 TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, Deno.
 
-[![npm version](https://img.shields.io/npm/v/@get-h3/h3-harness-sdk)](https://www.npmjs.com/package/@get-h3/h3-harness-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Install
 
+> **Not yet published to the npm registry.** The command below is the intended route
+> once published; until then use the GitHub or from-source routes below.
+
 ```bash
 npm install @get-h3/h3-harness-sdk
-# or
+```
+
+### From GitHub (works today)
+
+```bash
+npm install github:get-h3/sdk-typescript
+```
+
+The package's `prepare` script builds `dist/` automatically on install.
+
+### From source
+
+```bash
+git clone https://github.com/get-h3/sdk-typescript
+cd sdk-typescript
+npm ci && npm run build
+```
+
+### Bun
+
+```bash
+bun add github:get-h3/sdk-typescript
+# once published:
 bun add @get-h3/h3-harness-sdk
 ```
 
