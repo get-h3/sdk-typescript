@@ -111,6 +111,143 @@ Creates a Hono router with all H3 endpoints wired:
 
 All endpoints validate requests with Zod schemas and return structured error responses on failure.
 
+### Wire Shapes
+
+Every endpoint validates its request body against a Zod schema exported from `src/protocol.ts` (e.g. `ProcessRequestSchema`). The examples below are the exact wire shapes — field names, required/optional markers, and defaults match the schemas, so you can build a client against this reference without reading the source.
+
+#### `POST /v1/process` — `ProcessRequest`
+
+```json
+{
+  "session_id": "sess_01J2abc",
+  "message": {
+    "role": "user",
+    "content": "Do something",
+    "attachments": [
+      { "type": "image", "url": "https://example.com/a.png", "mime_type": "image/png" }
+    ],
+    "timestamp": "2026-08-05T12:00:00Z"
+  },
+  "identity": {
+    "platform": "telegram",
+    "chat_id": "-1001234567890",
+    "thread_id": "42",
+    "user_name": "alice",
+    "user_id": "42"
+  },
+  "context": {
+    "history": [{ "role": "user", "content": "Previous message" }],
+    "tools": [{ "name": "read_file", "description": "Read a file", "parameters": { "path": { "type": "string" } } }],
+    "models": [{ "name": "deepseek-v4-flash", "provider": "deepseek", "context_window": 131072 }],
+    "memory": "persistent session memory",
+    "skills": ["coding-hermes"],
+    "config": { "max_iterations": 100, "timeout_seconds": 60, "temperature": 0.7 },
+    "session_state": { "turn_count": 2, "total_tool_calls": 3, "total_llm_calls": 2, "cost_so_far": 0.0012, "started_at": "2026-08-05T11:59:00Z" }
+  }
+}
+```
+
+Defaults: `message.role` = `"user"`; `identity.user_name` / `user_id` = `"unknown"`; `context.history` / `tools` / `models` = `[]`; `config.max_iterations` = `100`, `config.timeout_seconds` = `60`; `session_state` counters = `0`.
+
+Response (`200`) — a `Decision`. `history` is echoed back from `context.history`:
+
+```json
+{
+  "decision": "text",
+  "decision_id": "9b2e4f1a-6c3d-4e8b-9a2f-1c5d7e9b0a3f",
+  "history": [{ "role": "user", "content": "Do something" }],
+  "text": { "content": "Hello from TypeScript!", "finished": true }
+}
+```
+
+#### `POST /v1/result` — `ResultRequest`
+
+```json
+{
+  "session_id": "sess_01J2abc",
+  "decision_id": "9b2e4f1a-6c3d-4e8b-9a2f-1c5d7e9b0a3f",
+  "result": {
+    "type": "tool_result",
+    "tool_name": "read_file",
+    "data": { "content": "file contents" },
+    "duration_ms": 42,
+    "success": true
+  }
+}
+```
+
+`result.type` is one of `tool_result`, `llm_response`, `text_sent`, `delegate_result`, `wait_timeout`, `error`. Response (`200`) — a `Decision` (same shape as above).
+
+#### `POST /v1/cancel` — `CancelRequest`
+
+```json
+{
+  "session_id": "sess_01J2abc",
+  "reason": "user_interrupt"
+}
+```
+
+`reason` is one of `user_interrupt`, `timeout`, `system`. Response (`200`):
+
+```json
+{ "session_id": "sess_01J2abc", "cancelled": true }
+```
+
+#### `GET /v1/health` — `HealthResponse`
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "transport": "rest",
+  "protocol_version": "1.0",
+  "uptime_seconds": 3600,
+  "active_sessions": 2,
+  "capabilities": ["tool_call", "llm_call", "text", "wait", "delegate", "end"]
+}
+```
+
+`status` is one of `ok`, `degraded`, `down`; `capabilities` items are one of `tool_call`, `llm_call`, `text`, `wait`, `delegate`, `end`.
+
+#### `GET /v1/sessions/:id` — `SessionResponse`
+
+```json
+{
+  "session_id": "sess_01J2abc",
+  "started_at": "2026-08-05T11:59:00Z",
+  "last_active": "2026-08-05T12:00:00Z",
+  "turn_count": 2,
+  "status": "active",
+  "current_decision_type": "text"
+}
+```
+
+`status` is one of `active`, `completed`, `expired`, `cancelled`. Unknown sessions return `404` with a `SESSION_NOT_FOUND` error.
+
+#### `DELETE /v1/sessions/:id`
+
+Response (`200`):
+
+```json
+{ "session_id": "sess_01J2abc", "terminated": true }
+```
+
+#### Errors — `ErrorResponse`
+
+Validation failures return `400` with an `ErrorResponse`:
+
+```json
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request: Invalid JSON body",
+    "details": {}
+  }
+}
+```
+
+`error.code` is one of `INVALID_REQUEST`, `INVALID_DECISION`, `UNKNOWN_TOOL`, `UNKNOWN_MODEL`, `SESSION_NOT_FOUND`, `SESSION_EXPIRED`, `HARNESS_TIMEOUT`, `INTERNAL_ERROR`. Harness exceptions during `onProcess` / `onResult` are returned as `200` with an `end` decision (`reason: "error"`) rather than an HTTP error.
+
 ### Middleware
 
 ```typescript
