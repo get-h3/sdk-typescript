@@ -4,10 +4,31 @@ TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, 
 
 ## Install
 
+> **Not yet published to the npm registry.** The command below is the intended route
+> once published; until then use the GitHub route below.
+
 ```bash
 npm install @get-h3/h3-harness-sdk
 # or
 bun add @get-h3/h3-harness-sdk
+```
+
+### From GitHub (works today)
+
+```bash
+npm install github:get-h3/sdk-typescript
+# or
+bun add github:get-h3/sdk-typescript
+```
+
+The package's `prepare` script builds `dist/` automatically on install.
+
+### From source
+
+```bash
+git clone https://github.com/get-h3/sdk-typescript
+cd sdk-typescript
+npm ci && npm run build
 ```
 
 ## Quickstart
@@ -57,6 +78,15 @@ export default app;
 > (`'text'`, `'end'`) in decision payloads — importing `DecisionType` as a
 > value throws a SyntaxError at module load. See `src/examples/echo.ts` for
 > the battery-passing pattern.
+
+> **Compliance reference:** the Quickstart above is the minimal hello-world —
+> it always returns `finished: true`, so it does NOT satisfy the h3-test
+> battery's partial-turn region (`process_text_finished_false`). For a
+> battery-passing harness, use `src/examples/echo.ts` as the reference
+> implementation: it demonstrates the `finished: false` partial-turn
+> semantics (mark a turn partial whenever the response is not the
+> user-visible final answer). See the README's "Partial turns — finished:
+> false" section for details.
 
 ## Package Structure
 

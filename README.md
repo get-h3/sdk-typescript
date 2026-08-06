@@ -4,6 +4,12 @@ TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+> **Runtime support:** the CI matrix tests Node 20 and 22 only. Bun and Deno
+> install paths are documented below and the SDK ships ESM + CommonJS builds,
+> but neither runtime is CI-covered — Bun's `bunx vitest` runner and Deno's
+> ESM/Zod resolution are unverified. See [Runtime support](#runtime-support)
+> for the current status and known limitations.
+
 ## Install
 
 > **Not yet published to the npm registry.** The command below is the intended route
@@ -36,6 +42,30 @@ bun add github:get-h3/sdk-typescript
 # once published:
 bun add @get-h3/h3-harness-sdk
 ```
+
+## Runtime support
+
+| Runtime | Install                                | CI-tested      | Status                                                               |
+| ------- | -------------------------------------- | -------------- | -------------------------------------------------------------------- |
+| Node 20 | `npm ci`                               | ✅ (CI matrix) | Fully supported                                                      |
+| Node 22 | `npm ci`                               | ✅ (CI matrix) | Fully supported                                                      |
+| Bun     | `bun add github:get-h3/sdk-typescript` | ❌             | Install path documented; test runner not CI-covered                  |
+| Deno    | n/a (no documented install path)       | ❌             | Not verified — ESM/Zod 4 resolution and Hono fetch adapters unproven |
+
+**Known limitations (as of 2026-08-06):**
+
+- The CI matrix runs Node 20/22 only — the "Works with Node, Bun, Deno"
+  claim in the tagline is aspirational for Bun/Deno, not CI-proven.
+- **Bun:** `bun add` installs from the GitHub route, but `bunx vitest run`
+  has never been exercised in CI. Bun's module resolution differs from
+  Node's (`bun` has its own resolver); the SDK's ESM build should load,
+  but this is unverified.
+- **Deno:** no install route exists yet (no Deno-compatible package entry).
+  Deno's ESM resolution and Zod 4 compatibility are unproven — do not rely
+  on Deno until a CI-covered matrix entry or a documented limitation is
+  added.
+- Node is the supported baseline; if you hit a Bun/Deno-specific issue,
+  please file an issue with the runtime version.
 
 ## Quickstart
 
