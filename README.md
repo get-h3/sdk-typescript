@@ -40,27 +40,41 @@ bun add @get-h3/h3-harness-sdk
 ## Quickstart
 
 ```typescript
-import { Hono } from 'hono';
-import { createH3Router, type Harness, type Decision } from '@get-h3/h3-harness-sdk';
+import { Hono } from "hono";
+import {
+  createH3Router,
+  type Harness,
+  type Decision,
+} from "@get-h3/h3-harness-sdk";
 
 class MyHarness implements Harness {
   async onProcess(): Promise<Decision> {
     return {
-      decision: 'text',
+      decision: "text",
       decision_id: crypto.randomUUID(),
-      text: { content: 'Hello from TypeScript!', finished: true },
+      text: { content: "Hello from TypeScript!", finished: true },
     };
   }
   async onResult(): Promise<Decision> {
-    return { decision: 'end', decision_id: crypto.randomUUID(), end: { reason: 'task_complete' } };
+    return {
+      decision: "end",
+      decision_id: crypto.randomUUID(),
+      end: { reason: "task_complete" },
+    };
   }
   health() {
-    return { status: 'ok', version: '1.0.0', transport: 'rest', protocol_version: '1.0', capabilities: ['text', 'end'] };
+    return {
+      status: "ok",
+      version: "1.0.0",
+      transport: "rest",
+      protocol_version: "1.0",
+      capabilities: ["text", "end"],
+    };
   }
 }
 
 const app = new Hono();
-app.route('/', createH3Router(new MyHarness()));
+app.route("/", createH3Router(new MyHarness()));
 export default app;
 ```
 
@@ -68,8 +82,16 @@ export default app;
 > TypeScript types only (runtime validation happens via the companion Zod
 > schemas, e.g. `DecisionTypeSchema`). Use the string literals shown above
 > (`'text'`, `'end'`) in decision payloads — importing `DecisionType` as a
-> value throws a SyntaxError at module load. See [Minimal Harness](#minimal-harness)
-> and `src/examples/echo.ts` for the battery-passing pattern.
+> value throws a SyntaxError at module load. See the [Echo Harness](#echo-harness)
+> example and `src/examples/echo.ts` for the battery-passing pattern.
+
+> **Compliance reference:** the Quickstart above is the minimal hello-world —
+> it always returns `finished: true`, so it does NOT satisfy the h3-test
+> battery's partial-turn region (`process_text_finished_false`). For a
+> battery-passing harness, use [`src/examples/echo.ts`](src/examples/echo.ts)
+> as the reference implementation: it demonstrates the `finished: false`
+> partial-turn semantics described in
+> [Partial turns — `finished: false`](#partial-turns--finished-false).
 
 ## API Reference
 
@@ -100,13 +122,13 @@ interface Harness {
 
 Creates a Hono router with all H3 endpoints wired:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/v1/health` | Health check — calls `harness.health()` |
-| `POST` | `/v1/process` | Process a user message — calls `harness.onProcess()` |
-| `POST` | `/v1/result` | Return tool/LLM results — calls `harness.onResult()` |
-| `POST` | `/v1/cancel` | Cancel the current turn — calls `harness.onCancel()` |
-| `GET` | `/v1/sessions/:id` | Get session status |
+| Method   | Path               | Description                                                |
+| -------- | ------------------ | ---------------------------------------------------------- |
+| `GET`    | `/v1/health`       | Health check — calls `harness.health()`                    |
+| `POST`   | `/v1/process`      | Process a user message — calls `harness.onProcess()`       |
+| `POST`   | `/v1/result`       | Return tool/LLM results — calls `harness.onResult()`       |
+| `POST`   | `/v1/cancel`       | Cancel the current turn — calls `harness.onCancel()`       |
+| `GET`    | `/v1/sessions/:id` | Get session status                                         |
 | `DELETE` | `/v1/sessions/:id` | Terminate a session — calls `harness.onSessionTerminate()` |
 
 All endpoints validate requests with Zod schemas and return structured error responses on failure.
@@ -124,7 +146,11 @@ Every endpoint validates its request body against a Zod schema exported from `sr
     "role": "user",
     "content": "Do something",
     "attachments": [
-      { "type": "image", "url": "https://example.com/a.png", "mime_type": "image/png" }
+      {
+        "type": "image",
+        "url": "https://example.com/a.png",
+        "mime_type": "image/png"
+      }
     ],
     "timestamp": "2026-08-05T12:00:00Z"
   },
@@ -137,12 +163,34 @@ Every endpoint validates its request body against a Zod schema exported from `sr
   },
   "context": {
     "history": [{ "role": "user", "content": "Previous message" }],
-    "tools": [{ "name": "read_file", "description": "Read a file", "parameters": { "path": { "type": "string" } } }],
-    "models": [{ "name": "deepseek-v4-flash", "provider": "deepseek", "context_window": 131072 }],
+    "tools": [
+      {
+        "name": "read_file",
+        "description": "Read a file",
+        "parameters": { "path": { "type": "string" } }
+      }
+    ],
+    "models": [
+      {
+        "name": "deepseek-v4-flash",
+        "provider": "deepseek",
+        "context_window": 131072
+      }
+    ],
     "memory": "persistent session memory",
     "skills": ["coding-hermes"],
-    "config": { "max_iterations": 100, "timeout_seconds": 60, "temperature": 0.7 },
-    "session_state": { "turn_count": 2, "total_tool_calls": 3, "total_llm_calls": 2, "cost_so_far": 0.0012, "started_at": "2026-08-05T11:59:00Z" }
+    "config": {
+      "max_iterations": 100,
+      "timeout_seconds": 60,
+      "temperature": 0.7
+    },
+    "session_state": {
+      "turn_count": 2,
+      "total_tool_calls": 3,
+      "total_llm_calls": 2,
+      "cost_so_far": 0.0012,
+      "started_at": "2026-08-05T11:59:00Z"
+    }
   }
 }
 ```
@@ -251,13 +299,13 @@ Validation failures return `400` with an `ErrorResponse`:
 ### Middleware
 
 ```typescript
-import { addMiddleware, requestLogger } from '@get-h3/h3-harness-sdk';
+import { addMiddleware, requestLogger } from "@get-h3/h3-harness-sdk";
 
 // Option 1: add logging middleware to an existing Hono app
 addMiddleware(app);
 
 // Option 2: use the raw middleware directly
-app.use('*', requestLogger);
+app.use("*", requestLogger);
 ```
 
 `requestLogger` logs each request with method, path, status, and duration in ms.
@@ -269,14 +317,14 @@ On exceptions, it catches the error and returns a 500 JSON response in H3 `Error
 
 All H3 v1 protocol types are exported with matching Zod schemas:
 
-| Category | Exports |
-|----------|---------|
-| **Enums** | `DecisionType`, `EndReason`, `CancelReason`, `ResultType`, `SessionStatus`, `ErrorCode`, `HealthStatus`, `AttachmentType`, `MessageRole`, `Capability` |
-| **Common** | `Attachment`, `Message`, `Identity`, `HistoryEntry`, `Tool`, `Model`, `SessionState`, `Config`, `Context` |
-| **Decisions** | `ToolCall`, `LLMMessage`, `LLMCall`, `TextResponse`, `Wait`, `Delegate`, `End` |
-| **Requests** | `ProcessRequest`, `ResultPayload`, `ResultRequest`, `CancelRequest` |
-| **Responses** | `HealthResponse`, `ErrorDetail`, `ErrorResponse`, `SessionResponse` |
-| **Top-level** | `Decision` |
+| Category      | Exports                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Enums**     | `DecisionType`, `EndReason`, `CancelReason`, `ResultType`, `SessionStatus`, `ErrorCode`, `HealthStatus`, `AttachmentType`, `MessageRole`, `Capability` |
+| **Common**    | `Attachment`, `Message`, `Identity`, `HistoryEntry`, `Tool`, `Model`, `SessionState`, `Config`, `Context`                                              |
+| **Decisions** | `ToolCall`, `LLMMessage`, `LLMCall`, `TextResponse`, `Wait`, `Delegate`, `End`                                                                         |
+| **Requests**  | `ProcessRequest`, `ResultPayload`, `ResultRequest`, `CancelRequest`                                                                                    |
+| **Responses** | `HealthResponse`, `ErrorDetail`, `ErrorResponse`, `SessionResponse`                                                                                    |
+| **Top-level** | `Decision`                                                                                                                                             |
 
 Each type has a companion Zod schema (e.g., `ProcessRequestSchema`) for runtime validation.
 
@@ -285,18 +333,18 @@ Each type has a companion Zod schema (e.g., `ProcessRequestSchema`) for runtime 
 For unit testing harnesses without a running Hermes Core:
 
 ```typescript
-import { MockHermes } from '@get-h3/h3-harness-sdk';
+import { MockHermes } from "@get-h3/h3-harness-sdk";
 
 const mock = new MockHermes(myHarness);
 
 // Send a user message → get the harness's Decision
-const decision = await mock.sendMessage('Do something');
+const decision = await mock.sendMessage("Do something");
 
 // Send a tool result back → get the next Decision
 const next = await mock.sendResult({
-  type: 'tool_result',
-  tool_name: 'read_file',
-  data: { content: 'file contents' },
+  type: "tool_result",
+  tool_name: "read_file",
+  data: { content: "file contents" },
   duration_ms: 42,
   success: true,
 });
@@ -317,14 +365,14 @@ their state and producing wrong decisions.
 const sessionId = crypto.randomUUID();
 
 // Turn 1 — the harness records session_state for `sessionId`
-const decision = await mock.sendMessage('Do something', sessionId);
+const decision = await mock.sendMessage("Do something", sessionId);
 
 // Turn 2 — same session id → the harness sees the state from turn 1
 const next = await mock.sendResult(
   {
-    type: 'tool_result',
-    tool_name: 'read_file',
-    data: { content: 'file contents' },
+    type: "tool_result",
+    tool_name: "read_file",
+    data: { content: "file contents" },
     duration_ms: 42,
     success: true,
   },
@@ -343,47 +391,103 @@ a UUID is auto-generated then, which is fine unless the harness matches on
 
 ### Minimal Harness
 
+The smallest possible harness — a single `finished: true` text response per
+turn. Minimal by design: it does **not** handle partial turns, so it is not
+battery-complete on its own (see [Echo Harness](#echo-harness)).
+
 ```typescript
-import { Hono } from 'hono';
-import { createH3Router, type Harness, type Decision, type HealthResponse } from '@get-h3/h3-harness-sdk';
+import { Hono } from "hono";
+import {
+  createH3Router,
+  type Harness,
+  type Decision,
+  type HealthResponse,
+} from "@get-h3/h3-harness-sdk";
 
 class MinimalHarness implements Harness {
   async onProcess(): Promise<Decision> {
     return {
-      decision: 'text',
+      decision: "text",
       decision_id: crypto.randomUUID(),
-      text: { content: 'Hello from TypeScript!', finished: true },
+      text: { content: "Hello from TypeScript!", finished: true },
     };
   }
   async onResult(): Promise<Decision> {
-    return { decision: 'end', decision_id: crypto.randomUUID(), end: { reason: 'task_complete' } };
+    return {
+      decision: "end",
+      decision_id: crypto.randomUUID(),
+      end: { reason: "task_complete" },
+    };
   }
   health(): HealthResponse {
-    return { status: 'ok', version: '0.1.0', transport: 'rest', protocol_version: '1.0', capabilities: ['text', 'end'] };
+    return {
+      status: "ok",
+      version: "0.1.0",
+      transport: "rest",
+      protocol_version: "1.0",
+      capabilities: ["text", "end"],
+    };
   }
 }
 
 const app = new Hono();
-app.route('/', createH3Router(new MinimalHarness()));
+app.route("/", createH3Router(new MinimalHarness()));
 export default app;
 ```
 
+### Partial turns — `finished: false`
+
+`text.finished` tells the shim whether this decision completes the turn:
+
+- `finished: true` — final response. The shim delivers the text and the turn ends.
+- `finished: false` — partial response. The harness signals it still has work
+  (a thought in progress, tool calls pending); the session continues with
+  another `onProcess` call.
+
+A harness that always returns `finished: true` fails the h3-test
+`process_text_finished_false` region: the battery sends messages such as
+`"start a thought..."`, `"do not finish"`, or text ending in `"..."` and expects
+a `finished: false` text decision. Mark a turn partial whenever the response is
+not the user-visible final answer — e.g. while the model is "thinking" across
+multiple `onProcess` calls.
+
+See the [Echo Harness](#echo-harness) example for the exact pattern.
+
 ### Echo Harness
+
+The **compliance reference** for the h3-test battery (43/43): it implements
+partial-turn handling, so `text.finished` is `false` when the user's message
+indicates the thought is not complete:
 
 ```typescript
 class EchoHarness implements Harness {
   async onProcess(req: ProcessRequest): Promise<Decision> {
+    const content = req.message.content.toLowerCase();
+    const isPartial =
+      content.includes("do not finish") ||
+      content.includes("start a thought") ||
+      content.endsWith("...") ||
+      content.includes("incomplete") ||
+      content.includes("partial");
     return {
-      decision: 'text',
+      decision: "text",
       decision_id: crypto.randomUUID(),
-      text: { content: `You said: ${req.message.content}`, finished: true },
+      text: {
+        content: `You said: ${req.message.content}`,
+        finished: !isPartial,
+      },
     };
   }
   // ... onResult + health same as MinimalHarness
 }
 ```
 
-Full source in [`src/examples/`](src/examples/).
+Full source in [`src/examples/`](src/examples/). Verify compliance live:
+
+```bash
+npx tsx src/examples/echo.ts &
+h3-test --endpoint http://localhost:9191
+```
 
 ## Development
 

@@ -6,6 +6,7 @@
  */
 
 import { Hono } from "hono";
+import { pathToFileURL } from "node:url";
 
 import { createH3Router } from "../harness.js";
 import type { Harness } from "../harness.js";
@@ -58,5 +59,17 @@ class EchoHarness implements Harness {
 
 const app = new Hono();
 app.route("/", createH3Router(new EchoHarness()));
+
+// Serve directly when run as the entry point (npx tsx src/examples/echo.ts),
+// so the battery can be pointed at it: h3-test --endpoint http://localhost:9191
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  const { serve } = await import("@hono/node-server");
+  serve({ fetch: app.fetch, port: 9191 }, (info) => {
+    console.log(`echo harness listening on http://localhost:${info.port}`);
+  });
+}
 
 export default app;
