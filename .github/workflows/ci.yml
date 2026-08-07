@@ -35,3 +35,46 @@ jobs:
         working-directory: sdk-typescript
       - run: npx vitest run
         working-directory: sdk-typescript
+
+  e2e-battery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sdk-typescript
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: sdk-typescript/package-lock.json
+      - run: npm ci
+        working-directory: sdk-typescript
+      - run: npm run build
+        working-directory: sdk-typescript
+      - name: Run h3-test battery against echo harness (:9191)
+        working-directory: sdk-typescript
+        run: |
+          set -euo pipefail
+          npx tsx src/examples/echo.ts &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+            pkill -P "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          # Wait for readiness (max ~30s); /v1/health is the router's health route
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:9191/v1/health >/dev/null 2>&1; then
+              echo "echo harness ready after ${i} probes (0.5s each)"
+              break
+            fi
+            sleep 0.5
+          done
+          if ! curl -fsS http://localhost:9191/v1/health >/dev/null 2>&1; then
+            echo "echo harness failed to become ready on :9191" >&2
+            exit 1
+          fi
+          # venv avoids PEP 668 externally-managed-environment on ubuntu-latest
+          python3 -m venv /tmp/h3-shim-venv
+          /tmp/h3-shim-venv/bin/pip install --quiet hermes-h3-shim
+          /tmp/h3-shim-venv/bin/h3-test --endpoint http://localhost:9191
