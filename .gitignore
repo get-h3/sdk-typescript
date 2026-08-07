@@ -16,3 +16,6 @@ pnpm-workspace.yaml
 
 # Stray dagger sandbox DB (hermes-dagger artifact, not part of this repo)
 dagger.db
+
+.coding-hermes/board/board.db.wal
+.coding-hermes/board/*.duckdb
