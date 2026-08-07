@@ -73,8 +73,16 @@ function errorResponse(
 export function createH3Router(harness: Harness): Hono {
   const app = new Hono();
 
-  // Track sessions seen via /v1/process
-  const knownSessions = new Set<string>();
+  // Track per-session state seen via /v1/process
+  const sessions = new Map<
+    string,
+    {
+      started_at: string;
+      last_active: string;
+      turn_count: number;
+      status: "active";
+    }
+  >();
 
   // GET /v1/health
   app.get("/v1/health", (c) => c.json(harness.health()));
@@ -93,8 +101,20 @@ export function createH3Router(harness: Harness): Hono {
       );
     }
     try {
-      // Track the session
-      knownSessions.add(req.session_id);
+      // Track the session: first process creates it, subsequent ones increment
+      const now = new Date().toISOString();
+      const existing = sessions.get(req.session_id);
+      if (existing) {
+        existing.turn_count += 1;
+        existing.last_active = now;
+      } else {
+        sessions.set(req.session_id, {
+          started_at: now,
+          last_active: now,
+          turn_count: 1,
+          status: "active",
+        });
+      }
       const decision = await harness.onProcess(req);
       // Echo back context per spec — test battery expects history at Decision level
       const resp = {
@@ -167,7 +187,8 @@ export function createH3Router(harness: Harness): Hono {
   // GET /v1/sessions/:session_id
   app.get("/v1/sessions/:session_id", (c) => {
     const sessionId = c.req.param("session_id");
-    if (!knownSessions.has(sessionId)) {
+    const session = sessions.get(sessionId);
+    if (!session) {
       return c.json(
         {
           error: {
@@ -180,10 +201,10 @@ export function createH3Router(harness: Harness): Hono {
     }
     return c.json({
       session_id: sessionId,
-      started_at: "",
-      last_active: "",
-      turn_count: 0,
-      status: "active",
+      started_at: session.started_at,
+      last_active: session.last_active,
+      turn_count: session.turn_count,
+      status: session.status,
     });
   });
 

@@ -316,7 +316,57 @@ describe("GET /v1/sessions/:session_id", () => {
     const body = await res.json();
     expect(body.session_id).toBe("ses-active");
     expect(body.status).toBe("active");
-    expect(body.turn_count).toBe(0);
+    expect(body.turn_count).toBe(1);
+    expect(body.started_at).not.toBe("");
+    expect(body.last_active).not.toBe("");
+  });
+
+  it("increments turn_count and refreshes last_active across process calls", async () => {
+    const app = makeApp(makeHarness());
+
+    const processBody = {
+      session_id: "ses-active",
+      message: { role: "user", content: "Hello" },
+      identity: { platform: "test", chat_id: "test" },
+      context: {
+        history: [],
+        tools: [],
+        models: [],
+        config: { max_iterations: 10, timeout_seconds: 300 },
+        session_state: {
+          turn_count: 0,
+          total_tool_calls: 0,
+          total_llm_calls: 0,
+          cost_so_far: 0,
+        },
+      },
+    };
+
+    // First process call creates the session
+    const firstRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(processBody),
+    });
+    expect(firstRes.status).toBe(200);
+
+    // Second process call increments the turn count
+    const secondRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(processBody),
+    });
+    expect(secondRes.status).toBe(200);
+
+    const res = await app.request("/v1/sessions/ses-active");
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.session_id).toBe("ses-active");
+    expect(body.status).toBe("active");
+    expect(body.turn_count).toBe(2);
+    expect(body.started_at).not.toBe("");
+    expect(body.last_active).not.toBe("");
   });
 
   it("returns 404 for an unknown session", async () => {
