@@ -64,3 +64,4 @@
 {"from":"src/__tests__/schema-validation.test.ts","to":"pkg:ajv","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"src/__tests__/schema-validation.test.ts","to":"pkg:ajv-formats","rel":"imports","provenance":"ast_exact","confidence":1.0}
 {"from":"src/__tests__/schema-validation.test.ts","to":"local:../protocol.js","rel":"imports","provenance":"ast_exact","confidence":1.0}
+{"from":"dist/examples/echo.js","to":"pkg:node:url","rel":"imports","provenance":"ast_exact","confidence":1.0}
