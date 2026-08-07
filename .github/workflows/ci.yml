@@ -76,5 +76,7 @@ jobs:
           fi
           # venv avoids PEP 668 externally-managed-environment on ubuntu-latest
           python3 -m venv /tmp/h3-shim-venv
-          /tmp/h3-shim-venv/bin/pip install --quiet hermes-h3-shim
+          # hermes-h3-shim not yet on PyPI (404 as of 2026-08-07) — install from
+          # the shim repo; switch to `pip install hermes-h3-shim` once published.
+          /tmp/h3-shim-venv/bin/pip install --quiet "git+https://github.com/get-h3/shim.git"
           /tmp/h3-shim-venv/bin/h3-test --endpoint http://localhost:9191
