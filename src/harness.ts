@@ -48,6 +48,12 @@ export interface Harness {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
+const STATUS_TO_ERROR_CODE = {
+  400: "INVALID_REQUEST",
+  404: "SESSION_NOT_FOUND",
+  500: "INTERNAL_ERROR",
+} as const;
+
 function errorResponse(
   c: Context,
   statusCode: 400 | 404 | 500,
@@ -55,7 +61,7 @@ function errorResponse(
 ): Response {
   const body = {
     error: {
-      code: "INTERNAL_ERROR" as const,
+      code: STATUS_TO_ERROR_CODE[statusCode],
       message,
     },
   };

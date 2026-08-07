@@ -130,7 +130,7 @@ describe("POST /v1/process", () => {
 
     const body = await res.json();
     expect(body.error).toBeDefined();
-    expect(body.error.code).toBe("INTERNAL_ERROR");
+    expect(body.error.code).toBe("INVALID_REQUEST");
   });
 
   it("returns end decision on harness error", async () => {
