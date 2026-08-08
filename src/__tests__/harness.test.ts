@@ -378,6 +378,82 @@ describe("GET /v1/sessions/:session_id", () => {
     expect(body.current_decision_type).toBe("text");
   });
 
+  it("reflects the LAST decision type when two process calls differ in type", async () => {
+    // First call returns "text", second returns "wait" — proves
+    // current_decision_type tracks the last decision, not a stale first one.
+    const decisionSequence: Decision[] = [
+      {
+        decision: "text",
+        decision_id: crypto.randomUUID(),
+        history: [],
+        text: { content: "First turn", finished: true },
+      },
+      {
+        decision: "wait",
+        decision_id: crypto.randomUUID(),
+        history: [],
+        wait: { reason: "awaiting tool result", duration_seconds: 30 },
+      },
+    ];
+    let processCalls = 0;
+    const app = makeApp(
+      makeHarness({
+        onProcess: async () =>
+          decisionSequence[processCalls++] ??
+          decisionSequence[decisionSequence.length - 1],
+      }),
+    );
+
+    const processBody = {
+      session_id: "ses-types",
+      message: { role: "user", content: "Hello" },
+      identity: { platform: "test", chat_id: "test" },
+      context: {
+        history: [],
+        tools: [],
+        models: [],
+        config: { max_iterations: 10, timeout_seconds: 300 },
+        session_state: {
+          turn_count: 0,
+          total_tool_calls: 0,
+          total_llm_calls: 0,
+          cost_so_far: 0,
+        },
+      },
+    };
+
+    const firstRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(processBody),
+    });
+    expect(firstRes.status).toBe(200);
+    const firstBody = await firstRes.json();
+
+    const secondRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(processBody),
+    });
+    expect(secondRes.status).toBe(200);
+    const secondBody = await secondRes.json();
+
+    // Sanity: the two calls really did produce different decision types
+    expect(firstBody.decision).toBe("text");
+    expect(secondBody.decision).toBe("wait");
+    expect(secondBody.decision_id).not.toBe(firstBody.decision_id);
+
+    const res = await app.request("/v1/sessions/ses-types");
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.turn_count).toBe(2);
+    expect(body.current_decision).toBe(secondBody.decision_id);
+    expect(body.current_decision).not.toBe(firstBody.decision_id);
+    // current_decision_type mirrors the SECOND decision's type, not stale text
+    expect(body.current_decision_type).toBe("wait");
+  });
+
   it("records the synthesized end decision when onProcess throws", async () => {
     const app = makeApp(
       makeHarness({
