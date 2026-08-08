@@ -309,6 +309,7 @@ describe("GET /v1/sessions/:session_id", () => {
       }),
     });
     expect(processRes.status).toBe(200);
+    const processBody = await processRes.json();
 
     const res = await app.request("/v1/sessions/ses-active");
     expect(res.status).toBe(200);
@@ -319,6 +320,8 @@ describe("GET /v1/sessions/:session_id", () => {
     expect(body.turn_count).toBe(1);
     expect(body.started_at).not.toBe("");
     expect(body.last_active).not.toBe("");
+    expect(body.current_decision).toBe(processBody.decision_id);
+    expect(body.current_decision_type).toBe("text");
   });
 
   it("increments turn_count and refreshes last_active across process calls", async () => {
@@ -349,6 +352,7 @@ describe("GET /v1/sessions/:session_id", () => {
       body: JSON.stringify(processBody),
     });
     expect(firstRes.status).toBe(200);
+    const firstBody = await firstRes.json();
 
     // Second process call increments the turn count
     const secondRes = await app.request("/v1/process", {
@@ -357,6 +361,7 @@ describe("GET /v1/sessions/:session_id", () => {
       body: JSON.stringify(processBody),
     });
     expect(secondRes.status).toBe(200);
+    const secondBody = await secondRes.json();
 
     const res = await app.request("/v1/sessions/ses-active");
     expect(res.status).toBe(200);
@@ -367,6 +372,54 @@ describe("GET /v1/sessions/:session_id", () => {
     expect(body.turn_count).toBe(2);
     expect(body.started_at).not.toBe("");
     expect(body.last_active).not.toBe("");
+    // Fields track the SECOND decision, not stale values from the first call
+    expect(body.current_decision).toBe(secondBody.decision_id);
+    expect(body.current_decision).not.toBe(firstBody.decision_id);
+    expect(body.current_decision_type).toBe("text");
+  });
+
+  it("records the synthesized end decision when onProcess throws", async () => {
+    const app = makeApp(
+      makeHarness({
+        onProcess: async () => {
+          throw new Error("Harness failure");
+        },
+      }),
+    );
+
+    const processRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-error",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
+    expect(processRes.status).toBe(200);
+    const processBody = await processRes.json();
+    expect(processBody.decision).toBe("end");
+    expect(processBody.end.reason).toBe("error");
+
+    const res = await app.request("/v1/sessions/ses-error");
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.current_decision).toBe(processBody.decision_id);
+    expect(body.current_decision_type).toBe("end");
+    expect(body.turn_count).toBe(1);
   });
 
   it("returns 404 for an unknown session", async () => {

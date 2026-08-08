@@ -81,6 +81,9 @@ export function createH3Router(harness: Harness): Hono {
       last_active: string;
       turn_count: number;
       status: "active";
+      current_decision: string;
+      current_decision_type:
+        "tool_call" | "llm_call" | "text" | "wait" | "delegate" | "end";
     }
   >();
 
@@ -100,22 +103,34 @@ export function createH3Router(harness: Harness): Hono {
         `Invalid request: ${(err as Error).message}`,
       );
     }
-    try {
-      // Track the session: first process creates it, subsequent ones increment
+    // Track the session: first process creates it, subsequent ones increment.
+    // current_decision/current_decision_type always mirror the last decision
+    // returned to the client (success or synthesized error decision).
+    const recordSession = (
+      decision: Pick<Decision, "decision" | "decision_id">,
+    ) => {
       const now = new Date().toISOString();
       const existing = sessions.get(req.session_id);
       if (existing) {
         existing.turn_count += 1;
         existing.last_active = now;
+        existing.current_decision = decision.decision_id;
+        existing.current_decision_type = decision.decision;
       } else {
         sessions.set(req.session_id, {
           started_at: now,
           last_active: now,
           turn_count: 1,
           status: "active",
+          current_decision: decision.decision_id,
+          current_decision_type: decision.decision,
         });
       }
+    };
+
+    try {
       const decision = await harness.onProcess(req);
+      recordSession(decision);
       // Echo back context per spec — test battery expects history at Decision level
       const resp = {
         ...decision,
@@ -124,11 +139,13 @@ export function createH3Router(harness: Harness): Hono {
       return c.json(resp);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return c.json({
+      const errorDecision = {
         decision: "end" as const,
         decision_id: crypto.randomUUID(),
         end: { reason: "error" as const, summary: message },
-      });
+      };
+      recordSession(errorDecision);
+      return c.json(errorDecision);
     }
   });
 
@@ -205,6 +222,8 @@ export function createH3Router(harness: Harness): Hono {
       last_active: session.last_active,
       turn_count: session.turn_count,
       status: session.status,
+      current_decision: session.current_decision,
+      current_decision_type: session.current_decision_type,
     });
   });
 
