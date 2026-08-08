@@ -5,7 +5,8 @@ TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Runtime support:** the CI matrix tests Node 20 and 22 only. Bun and Deno
-> install paths are documented below and the SDK ships ESM + CommonJS builds,
+> install paths are documented below and the SDK ships an ESM build
+> (CommonJS consumers can use dynamic `import()` from a `require()` context),
 > but neither runtime is CI-covered — Bun's `bunx vitest` runner and Deno's
 > ESM/Zod resolution are unverified. See [Runtime support](#runtime-support)
 > for the current status and known limitations.
