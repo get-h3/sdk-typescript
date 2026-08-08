@@ -224,8 +224,46 @@ describe("POST /v1/cancel", () => {
     reason: "user_interrupt",
   };
 
+  // Battery test_5_9b: cancel of an unknown session 404s — sessions must be
+  // created via /v1/process before cancel (mirrors sdk-go/sdk-python).
+  async function createSession(app: Hono, sessionId: string) {
+    const res = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: sessionId,
+        message: {
+          role: "user",
+          content: "hello",
+          timestamp: "2026-01-01T00:00:00.000Z",
+        },
+        identity: {
+          platform: "test",
+          chat_id: "test",
+          user_name: "test",
+          user_id: "test-user",
+        },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+            started_at: "2026-01-01T00:00:00.000Z",
+          },
+        },
+      }),
+    });
+    expect(res.status).toBe(200);
+  }
+
   it("cancels and returns session info", async () => {
     const app = makeApp(makeHarness());
+    await createSession(app, "ses-abc");
     const res = await app.request("/v1/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -248,6 +286,22 @@ describe("POST /v1/cancel", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 404 for unknown session", async () => {
+    const app = makeApp(makeHarness());
+    const res = await app.request("/v1/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "nope-unknown",
+        reason: "user_interrupt",
+      }),
+    });
+    expect(res.status).toBe(404);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("SESSION_NOT_FOUND");
+  });
+
   it("returns 500 when onCancel throws", async () => {
     const app = makeApp(
       makeHarness({
@@ -256,6 +310,8 @@ describe("POST /v1/cancel", () => {
         },
       }),
     );
+    // Session must exist before cancel (battery test_5_9b: unknown session 404s)
+    await createSession(app, "ses-abc");
 
     const res = await app.request("/v1/cancel", {
       method: "POST",
@@ -267,6 +323,8 @@ describe("POST /v1/cancel", () => {
 
   it("returns cancelled true when onCancel not defined", async () => {
     const app = makeApp(makeHarness({ onCancel: undefined as never }));
+    // Session must exist before cancel (battery test_5_9b: unknown session 404s)
+    await createSession(app, "ses-abc");
 
     const res = await app.request("/v1/cancel", {
       method: "POST",

@@ -186,6 +186,9 @@ export function createH3Router(harness: Harness): Hono {
         `Invalid request: ${(err as Error).message}`,
       );
     }
+    if (!sessions.has(req.session_id)) {
+      return errorResponse(c, 404, `Session ${req.session_id} not found`);
+    }
     if (harness.onCancel) {
       try {
         const cancelled = await harness.onCancel(req);
