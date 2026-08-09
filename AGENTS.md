@@ -2,6 +2,12 @@
 
 TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, Deno.
 
+> **Runtime support:** the CI matrix runs **Node 20/22 only** (CI-tested). The
+> "Works with Node, Bun, Deno" tagline is aspirational for Bun/Deno — Bun's
+> install path is documented but its test runner is not CI-covered, and Deno
+> has no documented install path (ESM/Zod 4 resolution unverified). See the
+> README "Runtime support" section for the full status table and limitations.
+
 ## Install
 
 > **Not yet published to the npm registry.** The command below is the intended route
@@ -39,6 +45,7 @@ import {
   createH3Router,
   type Harness,
   type Decision,
+  type HealthResponse,
 } from "@get-h3/h3-harness-sdk";
 
 class MyHarness implements Harness {
@@ -46,6 +53,7 @@ class MyHarness implements Harness {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
+      history: [],
       text: { content: "Hello from TypeScript!", finished: true },
     };
   }
@@ -53,10 +61,11 @@ class MyHarness implements Harness {
     return {
       decision: "end",
       decision_id: crypto.randomUUID(),
+      history: [],
       end: { reason: "task_complete" },
     };
   }
-  health() {
+  health(): HealthResponse {
     return {
       status: "ok",
       version: "1.0.0",

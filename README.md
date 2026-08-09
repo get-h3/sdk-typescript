@@ -76,6 +76,7 @@ import {
   createH3Router,
   type Harness,
   type Decision,
+  type HealthResponse,
 } from "@get-h3/h3-harness-sdk";
 
 class MyHarness implements Harness {
@@ -83,6 +84,7 @@ class MyHarness implements Harness {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
+      history: [],
       text: { content: "Hello from TypeScript!", finished: true },
     };
   }
@@ -90,10 +92,11 @@ class MyHarness implements Harness {
     return {
       decision: "end",
       decision_id: crypto.randomUUID(),
+      history: [],
       end: { reason: "task_complete" },
     };
   }
-  health() {
+  health(): HealthResponse {
     return {
       status: "ok",
       version: "1.0.0",
@@ -440,6 +443,7 @@ class MinimalHarness implements Harness {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
+      history: [],
       text: { content: "Hello from TypeScript!", finished: true },
     };
   }
@@ -447,6 +451,7 @@ class MinimalHarness implements Harness {
     return {
       decision: "end",
       decision_id: crypto.randomUUID(),
+      history: [],
       end: { reason: "task_complete" },
     };
   }
