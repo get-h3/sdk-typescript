@@ -127,6 +127,28 @@ export default app;
 > partial-turn semantics described in
 > [Partial turns — `finished: false`](#partial-turns--finished-false).
 
+### Serving your harness
+
+The Quickstart builds a Hono `app` but does not serve it — you need an HTTP
+server to expose the router. Use `@hono/node-server` (a devDependency of the
+SDK — add it to your own project's dependencies to use it):
+
+```typescript
+import { serve } from "@hono/node-server";
+
+serve({ fetch: app.fetch, port: 9191 });
+```
+
+Then verify:
+
+```bash
+curl http://localhost:9191/v1/health
+# {"status":"ok","version":"1.0.0","transport":"rest","protocol_version":"1.0","capabilities":["text","end"]}
+```
+
+Port `9191` is the h3-test battery's default target — see the
+[Echo Harness](#echo-harness) example for the full battery-passing pattern.
+
 ## API Reference
 
 ### Harness Interface

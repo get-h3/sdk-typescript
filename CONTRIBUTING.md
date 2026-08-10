@@ -1,13 +1,18 @@
 # Contributing to H3 SDK for TypeScript
 
-TypeScript SDK for building H3-compliant agent harnesses. Implements the harness side of the H3 protocol using Zod + Hono. Works with Node, Bun, and Deno.
+TypeScript SDK for building H3-compliant agent harnesses. Implements the harness side of the H3 protocol using Zod + Hono.
+
+> **Runtime support:** the CI matrix runs **Node 20/22 only** (CI-tested). Bun's
+> install path is documented but not CI-covered, and Deno has no documented
+> install path — see the README "Runtime support" section for the full status
+> table and limitations.
 
 ## Development Setup
 
 ```bash
 cd sdk-typescript/
-npm install
-# or: bun install
+npm ci
+# or: npm install
 ```
 
 ## Package Structure
@@ -15,20 +20,19 @@ npm install
 ```
 sdk-typescript/
 ├── src/
-│   ├── protocol.ts     # Zod schemas + TypeScript types (generated from protocol JSON Schema)
-│   ├── harness.ts      # Harness interface + Hono router
-│   ├── middleware.ts    # Request logging middleware
-│   ├── testbed.ts      # MockHermes for vitest/jest
-│   └── index.ts        # Public exports
-├── src/__tests__/
-│   ├── protocol.test.ts    # 43 tests
-│   ├── harness.test.ts     # 16 tests
-│   ├── testbed.test.ts     # 8 tests
-│   ├── middleware.test.ts  # 3 tests
-│   └── index.test.ts       # 21 tests
-└── examples/
-    ├── echo/           # Echo harness (returns messages back)
-    └── minimal/        # Bare-minimum example
+│   ├── protocol.ts          # Zod schemas + TypeScript types (generated from protocol JSON Schema)
+│   ├── harness.ts           # Harness interface + Hono router
+│   ├── middleware.ts        # Request logging middleware
+│   ├── testbed.ts           # MockHermes for vitest/jest
+│   ├── index.ts             # Public exports
+│   └── examples/
+│       ├── echo.ts          # Battery-passing echo harness (h3-test 43/43)
+│       └── minimal.ts       # Bare-minimum example
+├── src/__tests__/           # 6 test files, 141 tests (harness, index, middleware,
+│                            #   protocol, schema-validation, testbed)
+├── scripts/
+│   └── generate-schemas.ts  # Regenerates src/protocol.ts from protocol schemas
+└── .github/workflows/       # CI: build-and-test + e2e-battery; protocol regeneration
 ```
 
 ## Before Making Changes
@@ -37,8 +41,7 @@ sdk-typescript/
 
 ```bash
 npm test
-# or: bun test
-# 91 tests across 5 test files
+# vitest — 141 tests across 6 test files
 ```
 
 ### Run Type Check
@@ -47,26 +50,28 @@ npm test
 npx tsc --noEmit
 ```
 
-### Run the Test Battery
+### Format
 
 ```bash
-# Start the echo example in one terminal:
-npx tsx examples/echo/index.ts
+npx prettier --check 'src/**/*.ts'
+# fix: npx prettier --write 'src/**/*.ts'
+```
+
+### Run the Test Battery
+
+The h3-test compliance battery (43 tests, exit code 0 = H3-compliant) runs
+against a live harness endpoint. The compliance reference implementation is
+`src/examples/echo.ts` — it implements the `finished: false` partial-turn
+semantics the battery requires:
+
+```bash
+# Start the echo harness in one terminal:
+npx tsx src/examples/echo.ts
 
 # In another terminal, run the compliance test battery:
 h3-test --endpoint http://localhost:9191
 # 43 compliance tests, exit code 0 = compliant
 ```
-
-### Sync Protocol Types
-
-If the upstream protocol changed:
-
-```bash
-npm run sync-protocol
-```
-
-This regenerates `src/protocol.ts` from `get-h3/protocol` schemas. Never hand-edit generated Zod schemas.
 
 ## Making Changes
 
@@ -78,7 +83,7 @@ This regenerates `src/protocol.ts` from `get-h3/protocol` schemas. Never hand-ed
 
 ### Hono Router
 
-- `createH3Router()` builds a Hono router with `/v1/health`, `/v1/process`, `/v1/result`
+- `createH3Router()` builds a Hono router with `/v1/health`, `/v1/process`, `/v1/result`, `/v1/cancel`, `/v1/sessions/:id`
 - Must follow the H3 protocol exactly — see `get-h3/protocol/h3-protocol.yaml`
 - All endpoints log METHOD /path STATUS DURATION via middleware
 
@@ -94,6 +99,20 @@ This regenerates `src/protocol.ts` from `get-h3/protocol` schemas. Never hand-ed
 - Use `.optional()` for protocol-optional fields
 - Use `.passthrough()` to allow unknown fields without stripping them
 
+### Regenerating Protocol Types
+
+If the upstream protocol changed, regenerate `src/protocol.ts` from the
+`get-h3/protocol` schemas:
+
+```bash
+npx tsx scripts/generate-schemas.ts --protocol-dir ../protocol/schemas/v1
+npx prettier --write src/protocol.ts
+```
+
+`src/protocol.ts` is generated — never hand-edit it. The regeneration workflow
+runs in CI when the protocol schemas change. The generator is idempotent:
+regenerate + prettier must yield zero diff on `src/protocol.ts`.
+
 ### Testbed
 
 - `testbed.ts` provides `MockHermes` for unit testing harness logic
@@ -106,40 +125,42 @@ This regenerates `src/protocol.ts` from `get-h3/protocol` schemas. Never hand-ed
 
 ```bash
 npx tsc --noEmit     # Type check
-npm test             # Tests (91)
-npm run lint         # ESLint
+npm test             # Tests (141)
+npx prettier --check 'src/**/*.ts'
 ```
 
 ### CI Pipeline
 
-GitHub Actions runs on every PR:
-1. Type check (`tsc --noEmit`)
-2. Lint (ESLint)
-3. Tests (vitest, 91 tests)
-4. `h3-test --endpoint http://localhost:9191` (against echo example)
+GitHub Actions runs on every push/PR to `main`:
+
+1. `build-and-test` (Node 20/22 matrix): `tsc --noEmit`, build, dist import smoke, vitest
+2. `e2e-battery` (Node 22): starts `src/examples/echo.ts` on :9191 and runs `h3-test --endpoint http://localhost:9191` — gates on 43/43
 
 All must pass.
 
-## Known Issues
-
-- **process_preserves_history (QV-E2E-03):** The TS echo harness currently fails one test battery check — message history shrinks from 4 to 0 across turns. See the umbrella board at `get-h3/h3` for tracking.
-
 ## Release
 
+The package is **not yet published to the npm registry** — install via the
+GitHub route (`npm install github:get-h3/sdk-typescript`) until it is. When
+releasing:
+
 ```bash
+npm run build
+npm pack --dry-run   # verify the tarball ships dist/
 git tag v1.0.0
 git push origin v1.0.0
-# CI publishes to npm automatically
 ```
+
+`npm publish` is manual (registry auth required); CI does not publish.
 
 ## Review Checklist
 
-- [ ] `npm test` passes (91 tests)
+- [ ] `npm test` passes (141 tests)
 - [ ] `npx tsc --noEmit` passes
-- [ ] `npm run lint` passes
-- [ ] `h3-test --endpoint http://localhost:9191` passes against echo example
+- [ ] `npx prettier --check 'src/**/*.ts'` passes
+- [ ] `h3-test --endpoint http://localhost:9191` passes 43/43 against `src/examples/echo.ts`
 - [ ] New Zod fields use `.optional()` where appropriate
-- [ ] Protocol changes regenerated via `npm run sync-protocol`
+- [ ] Protocol changes regenerated via `scripts/generate-schemas.ts` and prettier-normalized
 - [ ] No hand-edits to generated schemas
 
 ## Questions?
