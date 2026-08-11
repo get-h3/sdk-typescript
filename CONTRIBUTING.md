@@ -26,7 +26,7 @@ sdk-typescript/
 │   ├── testbed.ts           # MockHermes for vitest/jest
 │   ├── index.ts             # Public exports
 │   └── examples/
-│       ├── echo.ts          # Battery-passing echo harness (h3-test 43/43)
+│       ├── echo.ts          # Battery-passing echo harness (h3-test 44/44)
 │       └── minimal.ts       # Bare-minimum example
 ├── src/__tests__/           # 6 test files, 141 tests (harness, index, middleware,
 │                            #   protocol, schema-validation, testbed)
@@ -134,7 +134,7 @@ npx prettier --check 'src/**/*.ts'
 GitHub Actions runs on every push/PR to `main`:
 
 1. `build-and-test` (Node 20/22 matrix): `tsc --noEmit`, build, dist import smoke, vitest
-2. `e2e-battery` (Node 22): starts `src/examples/echo.ts` on :9191 and runs `h3-test --endpoint http://localhost:9191` — gates on 43/43
+2. `e2e-battery` (Node 22): starts `src/examples/echo.ts` on :9191 and runs `h3-test --endpoint http://localhost:9191` — gates on 44/44
 
 All must pass.
 
@@ -158,7 +158,7 @@ git push origin v1.0.0
 - [ ] `npm test` passes (141 tests)
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npx prettier --check 'src/**/*.ts'` passes
-- [ ] `h3-test --endpoint http://localhost:9191` passes 43/43 against `src/examples/echo.ts`
+- [ ] `h3-test --endpoint http://localhost:9191` passes 44/44 against `src/examples/echo.ts`
 - [ ] New Zod fields use `.optional()` where appropriate
 - [ ] Protocol changes regenerated via `scripts/generate-schemas.ts` and prettier-normalized
 - [ ] No hand-edits to generated schemas

@@ -61,10 +61,10 @@ Validation failures → HTTP 400 with a detailed structured error (the message l
 
 ## Passing the compliance battery (the real gate)
 
-`h3-test --endpoint http://localhost:9191` — must be 43/43 before release.
+`h3-test --endpoint http://localhost:9191` — must be 44/44 before release.
 
 1. Text decisions need correct `finished`: `finished:false` for continuing turns. A harness that always returns `finished:true` fails `process_text_finished_false` (GAP-006). Reference logic in `src/examples/echo.ts` (triggers: "do not finish", "start a thought", trailing "...", "incomplete", "partial").
-2. `src/examples/echo.ts` is the battery-passing reference (43/43 verified). `minimal.ts`/README MinimalHarness are NOT battery-passing on their own.
+2. `src/examples/echo.ts` is the battery-passing reference (44/44 verified). `minimal.ts`/README MinimalHarness are NOT battery-passing on their own.
 3. The battery is fast (0.2s) — run it in CI or before every release.
 
 ## MockHermes (unit-testing)
