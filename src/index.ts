@@ -1,7 +1,7 @@
 /**
  * @get-h3/h3-harness-sdk
  * TypeScript SDK for building H3-compliant agent harnesses.
- * Works with Node, Bun, Deno.
+ * Works with Node (20/22 CI-tested); Bun and Deno documented but not CI-covered.
  */
 
 // ── Protocol: all types and schemas ─────────────────────────────────

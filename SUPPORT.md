@@ -8,7 +8,7 @@ For questions, bug reports, or feature requests related to the H3 TypeScript SDK
 
 ## Quick Links
 
-- **Package:** `npm install @get-h3/h3-harness-sdk`
+- **Package:** `npm install @get-h3/h3-harness-sdk` — **Not yet published to the npm registry**; install from GitHub today with `npm install github:get-h3/sdk-typescript`
 - **Examples:** [src/examples/](https://github.com/get-h3/sdk-typescript/tree/main/src/examples)
 
 ## Community
