@@ -59,18 +59,21 @@ npx prettier --check 'src/**/*.ts'
 
 ### Run the Test Battery
 
-The h3-test compliance battery (43 tests, exit code 0 = H3-compliant) runs
+The h3-test compliance battery (44 tests, exit code 0 = H3-compliant) runs
 against a live harness endpoint. The compliance reference implementation is
 `src/examples/echo.ts` — it implements the `finished: false` partial-turn
 semantics the battery requires:
 
 ```bash
-# Start the echo harness in one terminal:
+# Start the echo harness in one terminal (default port 9191):
 npx tsx src/examples/echo.ts
+
+# If :9191 is already taken, override the port with PORT:
+PORT=9876 npx tsx src/examples/echo.ts
 
 # In another terminal, run the compliance test battery:
 h3-test --endpoint http://localhost:9191
-# 43 compliance tests, exit code 0 = compliant
+# 44 compliance tests, exit code 0 = compliant
 ```
 
 ## Making Changes

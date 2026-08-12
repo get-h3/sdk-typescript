@@ -62,12 +62,15 @@ app.route("/", createH3Router(new EchoHarness()));
 
 // Serve directly when run as the entry point (npx tsx src/examples/echo.ts),
 // so the battery can be pointed at it: h3-test --endpoint http://localhost:9191
+// The port defaults to 9191 and can be overridden with the PORT env var
+// (useful on shared hosts where a leftover process may squat :9191).
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   const { serve } = await import("@hono/node-server");
-  serve({ fetch: app.fetch, port: 9191 }, (info) => {
+  const port = Number(process.env.PORT ?? 9191);
+  serve({ fetch: app.fetch, port }, (info) => {
     console.log(`echo harness listening on http://localhost:${info.port}`);
   });
 }
