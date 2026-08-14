@@ -131,7 +131,15 @@ export default app;
 
 The Quickstart builds a Hono `app` but does not serve it — you need an HTTP
 server to expose the router. Use `@hono/node-server` (a devDependency of the
-SDK — add it to your own project's dependencies to use it):
+SDK — add it to your own project's dependencies to use it), plus
+`@types/node` as a devDependency (the `serve()` call types against Node's
+`http` module — a tsc-based consumer fails to compile without it; tsx/Bun
+consumers can skip it since they don't typecheck):
+
+```bash
+npm i @hono/node-server
+npm i -D @types/node
+```
 
 ```typescript
 import { serve } from "@hono/node-server";
@@ -251,7 +259,7 @@ Every endpoint validates its request body against a Zod schema exported from `sr
 }
 ```
 
-Defaults: `message.role` = `"user"`; `identity.user_name` / `user_id` = `"unknown"`; `context.history` / `tools` / `models` = `[]`; `config.max_iterations` = `100`, `config.timeout_seconds` = `60`; `session_state` counters = `0`.
+`identity`, `context`, `context.config` and `context.session_state` are required objects. In other words: **config and session_state are required** — omitting them (or `identity` / `context` themselves) returns `400`. Only their inner fields default: `message.role` = `"user"`; `identity.user_name` / `user_id` = `"unknown"`; `context.history` / `tools` / `models` = `[]`; `config.max_iterations` = `100`, `config.timeout_seconds` = `60`; `session_state` counters = `0`.
 
 Response (`200`) — a `Decision`. `history` is echoed back from `context.history`:
 
@@ -263,6 +271,23 @@ Response (`200`) — a `Decision`. `history` is echoed back from `context.histor
   "text": { "content": "Hello from TypeScript!", "finished": true }
 }
 ```
+
+`decision` is one of `tool_call`, `llm_call`, `text`, `wait`, `delegate`, `end`; exactly one of the matching payload keys (`tool_call`, `llm_call`, `text`, `wait`, `delegate`, `end`) is present. A `tool_call` decision (field-by-field match with `ToolCallSchema` — `name` + `params` required, `reasoning` optional):
+
+```json
+{
+  "decision": "tool_call",
+  "decision_id": "8f2c9d4e-1b3a-4f6e-9c7d-2e5a8b0f1c44",
+  "history": [{ "role": "user", "content": "Read /etc/hostname" }],
+  "tool_call": {
+    "name": "read_file",
+    "params": { "path": "/etc/hostname" },
+    "reasoning": "The user asked to read a file"
+  }
+}
+```
+
+`llm_call`, `wait`, and `delegate` payloads follow the same pattern: `llm_call` takes `{ model, messages, ... }` (`LLMCallSchema`), `wait` takes `{ duration_ms, reason? }` (`WaitSchema`), `delegate` takes `{ target, input, ... }` (`DelegateSchema`).
 
 #### `POST /v1/result` — `ResultRequest`
 
@@ -335,6 +360,8 @@ Response (`200`):
 ```json
 { "session_id": "sess_01J2abc", "terminated": true }
 ```
+
+Unknown sessions return `404` with a `SESSION_NOT_FOUND` error (consistent with `GET /v1/sessions/:id` and `POST /v1/cancel`).
 
 #### Errors — `ErrorResponse`
 

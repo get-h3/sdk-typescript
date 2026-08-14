@@ -154,6 +154,36 @@ describe("POST /v1/process", () => {
     expect(body.end.reason).toBe("error");
     expect(body.end.summary).toBe("Harness failure");
   });
+
+  it("returns 500 INVALID_DECISION when harness returns an old-shape tool_call", async () => {
+    // Old wire shape {tool_name, arguments, call_id} (docs/dogfood/2026-08-04 era)
+    // must NOT pass through — GAP-033.
+    const app = makeApp(
+      makeHarness({
+        onProcess: async () =>
+          ({
+            decision: "tool_call",
+            decision_id: crypto.randomUUID(),
+            tool_call: {
+              tool_name: "read_file",
+              arguments: {},
+              call_id: "call-001",
+            },
+          }) as unknown as Decision,
+      }),
+    );
+
+    const res = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validProcessBody),
+    });
+    expect(res.status).toBe(500);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("INVALID_DECISION");
+    expect(body.error.message).toContain("tool_call");
+  });
 });
 
 // ── POST /v1/result ──────────────────────────────────────────────────
@@ -213,6 +243,31 @@ describe("POST /v1/result", () => {
     const body = await res.json();
     expect(body.decision).toBe("end");
     expect(body.end.summary).toBe("Result handler crash");
+  });
+
+  it("returns 500 INVALID_DECISION when harness returns an invalid decision type", async () => {
+    // A decision outside the DecisionTypeSchema enum must not pass through — GAP-033.
+    const app = makeApp(
+      makeHarness({
+        onResult: async () =>
+          ({
+            decision: "bogus",
+            decision_id: crypto.randomUUID(),
+          }) as unknown as Decision,
+      }),
+    );
+
+    const res = await app.request("/v1/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validResultBody),
+    });
+    expect(res.status).toBe(500);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("INVALID_DECISION");
+    expect(body.error.message).toContain("decision");
+    expect(body.error.message).toContain("Invalid option");
   });
 });
 
@@ -569,6 +624,42 @@ describe("GET /v1/sessions/:session_id", () => {
 // ── DELETE /v1/sessions/:session_id ──────────────────────────────────
 
 describe("DELETE /v1/sessions/:session_id", () => {
+  const validProcessBody = {
+    session_id: "ses-abc",
+    message: {
+      role: "user",
+      content: "Hello",
+      timestamp: "2026-01-01T00:00:00.000Z",
+    },
+    identity: {
+      platform: "test",
+      chat_id: "test",
+      user_name: "test",
+      user_id: "test-user",
+    },
+    context: {
+      history: [],
+      tools: [],
+      models: [],
+      config: { max_iterations: 10, timeout_seconds: 300 },
+      session_state: {
+        turn_count: 0,
+        total_tool_calls: 0,
+        total_llm_calls: 0,
+        cost_so_far: 0,
+        started_at: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  };
+
+  async function createSession(app: Hono): Promise<void> {
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validProcessBody),
+    });
+  }
+
   it("terminates session successfully", async () => {
     let terminated = "";
     const app = makeApp(
@@ -578,6 +669,7 @@ describe("DELETE /v1/sessions/:session_id", () => {
         },
       }),
     );
+    await createSession(app);
 
     const res = await app.request("/v1/sessions/ses-abc", { method: "DELETE" });
     expect(res.status).toBe(200);
@@ -592,12 +684,25 @@ describe("DELETE /v1/sessions/:session_id", () => {
     const app = makeApp(
       makeHarness({ onSessionTerminate: undefined as never }),
     );
+    await createSession(app);
 
-    const res = await app.request("/v1/sessions/ses-xyz", { method: "DELETE" });
+    const res = await app.request("/v1/sessions/ses-abc", { method: "DELETE" });
     expect(res.status).toBe(200);
 
     const body = await res.json();
     expect(body.terminated).toBe(true);
+  });
+
+  it("returns 404 SESSION_NOT_FOUND for an unknown session", async () => {
+    // DELETE must be consistent with GET and /v1/cancel — GAP-037.
+    const app = makeApp(makeHarness());
+    const res = await app.request("/v1/sessions/never-created", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(404);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("SESSION_NOT_FOUND");
   });
 
   it("returns 500 when onSessionTerminate throws", async () => {
@@ -608,8 +713,9 @@ describe("DELETE /v1/sessions/:session_id", () => {
         },
       }),
     );
+    await createSession(app);
 
-    const res = await app.request("/v1/sessions/ses-fail", {
+    const res = await app.request("/v1/sessions/ses-abc", {
       method: "DELETE",
     });
     expect(res.status).toBe(500);

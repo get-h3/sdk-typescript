@@ -58,10 +58,11 @@ function errorResponse(
   c: Context,
   statusCode: 400 | 404 | 500,
   message: string,
+  code: string = STATUS_TO_ERROR_CODE[statusCode],
 ): Response {
   const body = {
     error: {
-      code: STATUS_TO_ERROR_CODE[statusCode],
+      code,
       message,
     },
   };
@@ -129,7 +130,19 @@ export function createH3Router(harness: Harness): Hono {
     };
 
     try {
-      const decision = await harness.onProcess(req);
+      const rawDecision = await harness.onProcess(req);
+      const parsed = DecisionSchema.safeParse(rawDecision);
+      if (!parsed.success) {
+        return errorResponse(
+          c,
+          500,
+          `Invalid decision from harness: ${parsed.error.issues
+            .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+            .join("; ")}`,
+          "INVALID_DECISION",
+        );
+      }
+      const decision = parsed.data;
       recordSession(decision);
       // Echo back context per spec — test battery expects history at Decision level
       const resp = {
@@ -162,8 +175,19 @@ export function createH3Router(harness: Harness): Hono {
       );
     }
     try {
-      const decision = await harness.onResult(req);
-      return c.json(decision);
+      const rawDecision = await harness.onResult(req);
+      const parsed = DecisionSchema.safeParse(rawDecision);
+      if (!parsed.success) {
+        return errorResponse(
+          c,
+          500,
+          `Invalid decision from harness: ${parsed.error.issues
+            .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+            .join("; ")}`,
+          "INVALID_DECISION",
+        );
+      }
+      return c.json(parsed.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({
@@ -233,6 +257,9 @@ export function createH3Router(harness: Harness): Hono {
   // DELETE /v1/sessions/:session_id
   app.delete("/v1/sessions/:session_id", async (c) => {
     const sessionId = c.req.param("session_id");
+    if (!sessions.has(sessionId)) {
+      return errorResponse(c, 404, `Session ${sessionId} not found`);
+    }
     if (harness.onSessionTerminate) {
       try {
         await harness.onSessionTerminate(sessionId);

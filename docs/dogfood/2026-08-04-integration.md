@@ -2,14 +2,14 @@
 
 **Project:** `@get-h3/h3-harness-sdk` (get-h3/sdk-typescript)
 **Verdict:** 🟡 PROMISING-BUT-ROUGH
-**Run type:** Library consumer — a real harness built from scratch in `/tmp/dogfood-h3-sdk-typescript`, served over HTTP, verified with the official `h3-test` compliance battery (43 tests).
+**Run type:** Library consumer — a real harness built from scratch in `/tmp/dogfood-h3-sdk-typescript`, served over HTTP, verified with the official `h3-test` compliance battery (44 tests).
 
 ## The promise
 
 > "TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, Deno." — README
 > `npm install @get-h3/h3-harness-sdk` → implement the `Harness` interface → `createH3Router()` → H3-compliant.
 
-**Reality:** the SDK core delivers on the promise (a from-scratch harness passed 43/43 compliance in ~15 min of work) — but the **distribution story is broken**: the npm install command 404s and the git-install path ships an unimportable package. A real user cannot get the code by any documented route today.
+**Reality:** the SDK core delivers on the promise (a from-scratch harness passed 44/44 compliance in ~15 min of work) — but the **distribution story is broken**: the npm install command 404s and the git-install path ships an unimportable package. A real user cannot get the code by any documented route today.
 
 ## What I built (the working consumer)
 
@@ -33,7 +33,15 @@ npm init -y
 npm install /path/to/sdk-typescript hono @hono/node-server
 ```
 
-## The harness (works, 43/43)
+## The harness (works, 44/44)
+
+> **Shape update (2026-08-14):** the `tool_call` wire shape below was updated.
+> The obsolete `tool_name`,
+> `arguments`, and `call_id` keys were replaced by `name` and `params`
+> (matching `ToolCallSchema` in `src/protocol.ts` since b75e01a). The old shape
+> no longer compiles against the typed SDK and is rejected at runtime by the
+> router with `500 INVALID_DECISION` (GAP-033). Battery count corrected 43 → 44
+> (GAP-034).
 
 ```javascript
 // harness.mjs — tool-calling H3 harness (Node 22+, ESM)
@@ -53,7 +61,7 @@ class FileReaderHarness {
       return {
         decision: 'tool_call',
         decision_id: crypto.randomUUID(),
-        tool_call: { tool_name: 'read_file', arguments: { path }, call_id: crypto.randomUUID() },
+        tool_call: { name: 'read_file', params: { path } },
       };
     }
     // finished:false for partial-style messages — required by h3-test process_text_finished_false
@@ -111,7 +119,7 @@ All request bodies are Zod-validated; failures return HTTP 400 with a detailed, 
 ## Verified session lifecycle (all 200s)
 
 ```
-process  → { decision: 'tool_call', tool_call: { tool_name: 'read_file', ... } }
+process  → { decision: 'tool_call', tool_call: { name: 'read_file', ... } }
 result   → { decision: 'text', text: { content: 'File /etc/hostname contains: my-host-42', finished: true } }
 cancel   → { session_id, cancelled: true }
 GET/DELETE /v1/sessions/sess-003 → session status / { terminated: true }
@@ -121,8 +129,8 @@ GET/DELETE /v1/sessions/sess-003 → session status / { terminated: true }
 
 | Target | Result |
 |---|---|
-| My consumer harness (from scratch, ~15 min) | 43/43 PASSED (0.22s, p50 1.09ms) — after adding partial-turn handling |
-| SDK's own `dist/examples/echo.js` | 43/43 PASSED — the reference implementation |
+| My consumer harness (from scratch, ~15 min) | 44/44 PASSED (0.22s, p50 1.09ms) — after adding partial-turn handling |
+| SDK's own `dist/examples/echo.js` | 44/44 PASSED — the reference implementation |
 | Repo unit suite (sanity) | 134/134 in 351ms |
 
 Latency p50 ≈ 1.1–1.6ms — the router is fast.
@@ -144,7 +152,7 @@ Latency p50 ≈ 1.1–1.6ms — the router is fast.
 
 ## Verdict evidence
 
-- **Works:** yes — full lifecycle + 43/43 compliance from a fresh consumer.
+- **Works:** yes — full lifecycle + 44/44 compliance from a fresh consumer.
 - **Useful:** yes — H3 compliance is a real, testable gate; MockHermes testbed is genuinely handy.
 - **Usable:** no for a fresh user — every documented install route fails; the Quickstart is copy-paste broken; wire shapes undocumented. Time-to-first-success for me: ~25 min including workarounds (~5 min once GAP-001..003 land).
-- **Trustworthy:** yes — 134/134 unit tests verified, 43/43 battery on two harnesses, strict validation, structured errors, fast.
+- **Trustworthy:** yes — 134/134 unit tests verified, 44/44 battery on two harnesses, strict validation, structured errors, fast.
