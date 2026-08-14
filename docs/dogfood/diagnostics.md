@@ -89,3 +89,56 @@ process_text_finished_false: Expected finished=false, got True   → 42/43
 2. Write a harness, serve on :9191, run `h3-test --endpoint http://localhost:9191` — must be 43/43.
 3. Exercise the session lifecycle (process → result → cancel → sessions GET/DELETE).
 4. Run the README Quickstart verbatim — it must import and run (currently fails, GAP-003).
+
+---
+
+# 2026-08-14 — Second dogfood run: validation hole, stale teaching artifact, requiredness drift
+
+## How the router actually works (read this before touching harness.ts)
+
+`createH3Router(harness)` wires 6 endpoints. **Request** bodies are validated with Zod
+(`ProcessRequestSchema.parse` etc. → 400 `INVALID_REQUEST` on failure), but **outgoing decisions are NOT
+validated**: `DecisionSchema` is imported in `src/harness.ts` but only re-exported (L255). The GAP-009/010 fix
+(`be52c5e`, "close DecisionSchema z.any() hole") validated the *schema definition* and added type-export tests —
+it never wired `safeParse` into the router. Consequence (reproduced live): a harness returning
+`tool_call: {tool_name, arguments, call_id}` gets HTTP 200 with the garbage shape passed through verbatim.
+`INVALID_DECISION` (README errors table) is unreachable dead documentation. Battery tool_call tests are
+*optional* (pass when the harness returns another decision type), so a broken-shape harness still goes 44/44
+green. **This is the exact "all tests green, reality broken" pattern** the dogfood loop exists to catch.
+
+## Why the shape changed under everyone's feet
+
+`git log --follow src/protocol.ts`:
+- `9cf142f` (initial): `ToolCallSchema` had `tool_name`/`arguments`/`call_id` (pre-GAP-009/010 world; decisions
+  unvalidated so anything sailed through).
+- `b75e01a` (P5-05 generator fidelity): reconciled with get-h3/protocol → `{name, params, reasoning?}`.
+- `be52c5e`: hardened schemas + type-export runtime tests.
+
+The 2026-08-04 dogfood doc was written against the *old* shape and was never revisited when the protocol
+regenerated (`.schemas-changed` marker exists in the repo root — a signal that went unacted). The README never
+got a `tool_call` decision example, so the stale doc remained the only in-repo example. Root cause pattern:
+**schema regeneration happened, docs and teaching artifacts were not swept** — exactly what GAP-034/035 fix.
+
+## Requiredness drift (README vs reality)
+
+`ContextSchema.config` and `.session_state` have NO `.default()` — required objects. The battery's
+`_blank_context()` always sends `"config": {}, "session_state": {}`, so the battery can never catch a user who
+omits them. README's "Defaults:" paragraph lists inner-field defaults, which reads as "you may omit these" →
+minimal bodies 400 with a raw Zod wall. Docs should say: objects required, fields default.
+
+## Errors hit during this run (each = a GAP task)
+
+1. `400 INVALID_REQUEST: expected object at context.config / context.session_state` — omitted required objects → GAP-036.
+2. TS compile `'tool_name' does not exist in type '{name, params}'` — followed the 08-04 doc → GAP-034.
+3. Old-shape harness ran fine under tsx (no typecheck) and the router returned it 200 — the silent hole → GAP-033.
+4. `DELETE /v1/sessions/<unknown>` → 200 `{terminated:true}` vs GET/cancel 404 → GAP-037.
+5. tsc consumer: `Cannot find name 'node:http'/'Buffer'` from @hono/node-server types without @types/node → GAP-038.
+
+## The right way (updated 2026-08-14)
+
+1. Fresh consumer → `npm install github:get-h3/sdk-typescript` (works, 7s) → implement Harness with
+   `tool_call: {name, params}` (NOT the 08-04 doc's shape) → serve on :9191 → `h3-test` must be 44/44.
+2. Always send `identity` + `context` with `config:{}` and `session_state:{}` present.
+3. If you want runtime decision guarantees before GAP-033 lands, `.parse()` your decisions with the exported
+   Zod schemas in the harness.
+4. Sweep `docs/dogfood/*` and the usage SKILL.md whenever `protocol.ts` regenerates (watch `.schemas-changed`).

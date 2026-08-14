@@ -6,7 +6,7 @@ description: >-
   compliance gate, and pitfalls that break fresh users. Load this before
   writing or reviewing any harness code, README changes, or distribution work
   in this repo.
-version: 1.1.0
+version: 1.2.0
 category: software-development
 ---
 
@@ -26,7 +26,7 @@ your harness is instantly testable against the official compliance battery.
 - Test: `npm test` (vitest, 141 tests) · `npm run lint` (tsc --noEmit)
 - Compliance: `h3-test --endpoint http://localhost:9191` (44 tests, from `get-h3/shim`)
 
-## Install — the working paths (2026-08-11)
+## Install — the working paths (verified 2026-08-14)
 
 | Path | Works? |
 |---|---|
@@ -53,14 +53,31 @@ The README Quickstart and the Minimal Harness example both use literals correctl
 ## Wire shapes (documented in README § API Reference → Wire Shapes; quick reference here)
 
 - `POST /v1/process` body: `{ session_id, message: {role, content}, identity: {platform, chat_id, user_id?}, context: {config, session_state} }`
+  **`identity`, `context`, `context.config`, `context.session_state` are REQUIRED objects** (verified 2026-08-14:
+  omitting them → 400 `INVALID_REQUEST` with a raw Zod error wall). Inner fields default (`config.max_iterations`
+  = 100 etc.), the parent objects do NOT. Send `"config": {}` / `"session_state": {}` at minimum.
+- **Decision wire shape (the tool_call example README lacks — GAP-035):**
+  ```json
+  { "decision": "tool_call", "decision_id": "<uuid>", "history": [],
+    "tool_call": { "name": "calculator", "params": { "expression": "2+3*4" } } }
+  ```
+  `ToolCallSchema` is `{ name: string, params: Record<string,unknown>, reasoning? }`. **NOT** `tool_name` /
+  `arguments` / `call_id` — that old shape (taught by docs/dogfood/2026-08-04-integration.md, GAP-034) fails TS
+  compile and is silently passed through unvalidated at runtime (GAP-033).
 - `POST /v1/result` body: `{ session_id, decision_id, result: { type, tool_name?, data?, duration_ms?, success } }` — **singular `result`**, NOT `results`
-- `POST /v1/cancel` body: `{ session_id, reason: 'user_interrupt'|'timeout'|'system' }`
-- `GET|DELETE /v1/sessions/:id`
+- `POST /v1/cancel` body: `{ session_id, reason: 'user_interrupt'|'timeout'|'system' }` — 404 if session unknown
+- `GET /v1/sessions/:id` — 404 `SESSION_NOT_FOUND` if unknown. `DELETE` currently returns
+  `{terminated:true}` 200 even for unknown sessions (GAP-037 — treat as idempotent).
 
 Validation failures → HTTP 400 with `code: "INVALID_REQUEST"` and a detailed
 structured error (the message lists every missing field — read it, it's the
 de-facto docs). Server-side failures → HTTP 500, code `INTERNAL_ERROR`.
 (The 400→`INVALID_REQUEST` mapping landed in GAP-014.)
+
+**⚠️ Decision validation hole (GAP-033):** the router does NOT validate decisions returned by `onProcess` /
+`onResult` — `INVALID_DECISION` is documented but unreachable. Garbage decision shapes pass through with 200.
+TS users are protected by the types; JS/tsx users are not. Build decisions from the exported Zod schemas
+(`DecisionSchema.parse(...)`) in your harness if you want runtime guarantees until GAP-033 lands.
 
 ## Passing the compliance battery (the real gate)
 
@@ -94,6 +111,9 @@ serve({ fetch: app.fetch, port: 9191 }, (i) => console.log(`:${i.port}`));
 3. `req.results` doesn't exist → `req.result` (the wire shape is documented, but the singular form still trips people)
 4. MockHermes random session IDs → thread one sessionId (GAP-005)
 5. `finished:true` always → fails battery; copy echo.ts logic (GAP-006)
+6. `tool_call` decisions use `{name, params}` — NOT `{tool_name, arguments}` (GAP-034; old shape passes through unvalidated, GAP-033)
+7. Omit `identity`/`context`/`config`/`session_state` → 400; send `"config":{},"session_state":{}` (GAP-036)
+8. tsc consumers need `@types/node` for `@hono/node-server` serve() types (GAP-038; tsx users fine)
 
 ## Diagnostics
 
