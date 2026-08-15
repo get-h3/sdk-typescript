@@ -46,7 +46,7 @@ npm install /path/to/sdk-typescript hono @hono/node-server
 ```javascript
 // harness.mjs — tool-calling H3 harness (Node 22+, ESM)
 // NOTE: DecisionType is TYPE-ONLY in v0.1.0 — use string literals ('tool_call', 'text', 'end'),
-// not DecisionType.TOOL_CALL (README Quickstart is broken on this — see GAP-003).
+// not DecisionType.TOOL_CALL (see the README Quickstart for the string-literal pattern).
 import { Hono } from 'hono';
 import { createH3Router } from '@get-h3/h3-harness-sdk';
 

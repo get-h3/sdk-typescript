@@ -23,7 +23,7 @@ your harness is instantly testable against the official compliance battery.
 - Router: `createH3Router(harness)` → Hono router, 6 endpoints
 - Testbed: `MockHermes` for unit-testing harnesses without Hermes
 - Build: `npm ci && npm run build` (tsc → `dist/`, gitignored)
-- Test: `npm test` (vitest, 141 tests) · `npm run lint` (tsc --noEmit)
+- Test: `npm test` (vitest, 144 tests) · `npm run lint` (tsc --noEmit)
 - Compliance: `h3-test --endpoint http://localhost:9191` (44 tests, from `get-h3/shim`)
 
 ## Install — the working paths (verified 2026-08-14)

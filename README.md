@@ -379,6 +379,8 @@ Validation failures return `400` with an `ErrorResponse`:
 
 `error.code` is one of `INVALID_REQUEST`, `INVALID_DECISION`, `UNKNOWN_TOOL`, `UNKNOWN_MODEL`, `SESSION_NOT_FOUND`, `SESSION_EXPIRED`, `HARNESS_TIMEOUT`, `INTERNAL_ERROR`. Harness exceptions during `onProcess` / `onResult` are returned as `200` with an `end` decision (`reason: "error"`) rather than an HTTP error.
 
+A harness returning a malformed `Decision` (one that fails `DecisionSchema` validation) from `onProcess` / `onResult` yields `500` with error code `INVALID_DECISION` and the Zod issues in the message.
+
 ### Middleware
 
 ```typescript
