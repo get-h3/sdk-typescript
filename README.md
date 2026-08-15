@@ -365,7 +365,7 @@ Unknown sessions return `404` with a `SESSION_NOT_FOUND` error (consistent with 
 
 #### Errors — `ErrorResponse`
 
-Validation failures return `400` with an `ErrorResponse`:
+Request-body validation failures (malformed JSON, unknown fields, schema-invalid request payloads) return `400` `INVALID_REQUEST` — the request-validation path, distinct from the Decision-validation path where a malformed `Decision` from the harness returns `500` `INVALID_DECISION` (see below):
 
 ```json
 {
