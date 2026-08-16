@@ -4,12 +4,14 @@ TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Runtime support:** the CI matrix tests Node 20 and 22 only. Bun and Deno
-> install paths are documented below and the SDK ships an ESM build
-> (CommonJS consumers can use dynamic `import()` from a `require()` context),
-> but neither runtime is CI-covered — Bun's `bunx vitest` runner and Deno's
-> ESM/Zod resolution are unverified. See [Runtime support](#runtime-support)
-> for the current status and known limitations.
+> **Runtime support:** the CI matrix tests Node 20 and 22 only. The SDK is
+> **ESM-only** — there is no CommonJS build, and `require()` of the package
+> throws `ERR_REQUIRE_ESM` on Node < 20.19. CommonJS consumers should use
+> dynamic `import()` from a `require()` context. Bun and Deno install paths
+> are documented below, but neither runtime is CI-covered — Bun's `bunx
+> vitest` runner and Deno's ESM/Zod resolution are unverified. See
+> [Runtime support](#runtime-support) for the current status and known
+> limitations.
 
 ## Install
 
@@ -55,6 +57,10 @@ bun add @get-h3/h3-harness-sdk
 
 **Known limitations (as of 2026-08-06):**
 
+- **ESM-only:** the SDK ships no CommonJS build — `require()` of the package
+  throws `ERR_REQUIRE_ESM` on Node < 20.19. CommonJS consumers should use
+  dynamic `import()` from a `require()` context; `require(esm)` works
+  natively on Node ≥ 20.19 / ≥ 22.12.
 - The CI matrix runs Node 20/22 only — the "Works with Node, Bun, Deno"
   claim in the tagline is aspirational for Bun/Deno, not CI-proven.
 - **Bun:** `bun add` installs from the GitHub route, but `bunx vitest run`

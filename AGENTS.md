@@ -2,11 +2,14 @@
 
 TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, Deno.
 
-> **Runtime support:** the CI matrix runs **Node 20/22 only** (CI-tested). The
-> "Works with Node, Bun, Deno" tagline is aspirational for Bun/Deno — Bun's
-> install path is documented but its test runner is not CI-covered, and Deno
-> has no documented install path (ESM/Zod 4 resolution unverified). See the
-> README "Runtime support" section for the full status table and limitations.
+> **Runtime support:** the SDK is **ESM-only** — there is no CommonJS build,
+> and `require()` of the package throws `ERR_REQUIRE_ESM` on Node < 20.19
+> (CommonJS consumers should use dynamic `import()`). The CI matrix runs
+> **Node 20/22 only** (CI-tested). The "Works with Node, Bun, Deno" tagline
+> is aspirational for Bun/Deno — Bun's install path is documented but its
+> test runner is not CI-covered, and Deno has no documented install path
+> (ESM/Zod 4 resolution unverified). See the README "Runtime support"
+> section for the full status table and limitations.
 
 ## Install
 
