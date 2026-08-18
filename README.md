@@ -9,7 +9,7 @@ TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, 
 > throws `ERR_REQUIRE_ESM` on Node < 20.19. CommonJS consumers should use
 > dynamic `import()` from a `require()` context. Bun and Deno install paths
 > are documented below, but neither runtime is CI-covered — Bun's `bunx
-> vitest` runner and Deno's ESM/Zod resolution are unverified. See
+vitest` runner and Deno's ESM/Zod resolution are unverified. See
 > [Runtime support](#runtime-support) for the current status and known
 > limitations.
 
@@ -132,6 +132,9 @@ export default app;
 > as the reference implementation: it demonstrates the `finished: false`
 > partial-turn semantics described in
 > [Partial turns — `finished: false`](#partial-turns--finished-false).
+> Installed via GitHub, the examples ship compiled (the package delivers only
+> `dist/`): `import '@get-h3/h3-harness-sdk/examples/echo'`, or read
+> `node_modules/@get-h3/h3-harness-sdk/dist/examples/echo.js`.
 
 ### Serving your harness
 

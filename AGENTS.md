@@ -98,7 +98,10 @@ export default app;
 > implementation: it demonstrates the `finished: false` partial-turn
 > semantics (mark a turn partial whenever the response is not the
 > user-visible final answer). See the README's "Partial turns — finished:
-> false" section for details.
+> false" section for details. Installed via GitHub, the examples ship
+> compiled (the package delivers only `dist/`):
+> `import '@get-h3/h3-harness-sdk/examples/echo'`, or read
+> `node_modules/@get-h3/h3-harness-sdk/dist/examples/echo.js`.
 
 ## Package Structure
 
