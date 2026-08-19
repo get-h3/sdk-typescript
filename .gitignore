@@ -12,6 +12,7 @@ coverage/
 pnpm-lock.yaml
 pnpm-workspace.yaml
 .coding-hermes/board/board.db
+.coding-hermes/board/board.jsonl
 .coding-hermes/board/*.parquet
 
 # Stray dagger sandbox DB (hermes-dagger artifact, not part of this repo)
