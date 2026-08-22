@@ -116,6 +116,28 @@ npx prettier --write src/protocol.ts
 runs in CI when the protocol schemas change. The generator is idempotent:
 regenerate + prettier must yield zero diff on `src/protocol.ts`.
 
+#### `.schemas-changed` sentinel lifecycle
+
+The generator writes a gitignored sentinel file (`.schemas-changed`, repo root)
+when the regenerated output differs from `src/protocol.ts`, and removes it when
+the output matches. CI (`sync-protocol.yml`) runs the generator in a fresh
+checkout and fails the schema-alignment check if the sentinel exists — that is
+the signal that `src/protocol.ts` must be committed.
+
+`npm run generate` clears the sentinel automatically after a successful run, so
+a leftover `.schemas-changed` containing `true` after a completed regen + commit
+is a stale flag, not pending work. If you invoke
+`npx tsx scripts/generate-schemas.ts` directly instead (e.g. with
+`--protocol-dir`), delete the sentinel yourself after committing the regenerated
+`src/protocol.ts`:
+
+```bash
+rm -f .schemas-changed
+```
+
+Never commit the sentinel — it is gitignored by design and only meaningful on a
+local checkout or in CI's fresh clone.
+
 ### Testbed
 
 - `testbed.ts` provides `MockHermes` for unit testing harness logic
