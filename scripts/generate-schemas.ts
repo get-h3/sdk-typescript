@@ -725,12 +725,16 @@ function main() {
     console.error(`Wrote ${outPath} (${output.length} bytes)`);
   }
 
-  // Write change flag for CI
+  // The generator owns the sentinel lifecycle. A successful run never leaves
+  // a stale .schemas-changed behind: the flag is cleared unconditionally on
+  // every exit-0 path, regardless of how the generator was invoked (npm run
+  // generate, raw npx tsx, CI). CI alignment is verified via git diff on the
+  // tracked src/protocol.ts (see sync-protocol.yml), so nothing consumes the
+  // flag anymore and it is never written here.
   const flagPath = path.resolve(__dirname, "..", ".schemas-changed");
-  if (changed) {
-    fs.writeFileSync(flagPath, "true\n", "utf-8");
-  } else if (fs.existsSync(flagPath)) {
+  if (fs.existsSync(flagPath)) {
     fs.unlinkSync(flagPath);
+    console.error(`Cleared schema-change flag: ${flagPath}`);
   }
 
   process.exit(0);

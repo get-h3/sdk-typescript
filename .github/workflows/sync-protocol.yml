@@ -26,7 +26,9 @@ jobs:
       - run: npm ci
 
       - name: Regenerate schemas from protocol JSON Schema
-        run: npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+        run: |
+          npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+          npx prettier --write src/protocol.ts
 
       - name: Check TypeScript compilation
         run: npx tsc --noEmit
@@ -36,7 +38,7 @@ jobs:
 
       - name: Verify schema alignment (diff check)
         run: |
-          if [ -f .schemas-changed ]; then
+          if ! git diff --exit-code --quiet src/protocol.ts; then
             echo "⚠️  Protocol schemas have changed!"
             echo ""
             echo "Generated output differs from src/protocol.ts"
@@ -49,7 +51,7 @@ jobs:
             echo "  5. Publish: npm publish"
             echo ""
             echo "Run locally to preview:"
-            echo "  npx tsx scripts/generate-schemas.ts"
+            echo "  npm run generate"
             echo "  git diff src/protocol.ts"
             exit 1
           fi
@@ -80,7 +82,9 @@ jobs:
       - run: npm ci
 
       - name: Regenerate schemas
-        run: npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+        run: |
+          npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+          npx prettier --write src/protocol.ts
 
       - name: Verify tests pass
         run: npx vitest run

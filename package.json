@@ -39,7 +39,7 @@
     "lint": "tsc --noEmit",
     "fmt": "prettier --write 'src/**/*.ts'",
     "clean": "rm -rf dist node_modules",
-    "generate": "npx tsx scripts/generate-schemas.ts && npx prettier --write src/protocol.ts && rm -f .schemas-changed"
+    "generate": "npx tsx scripts/generate-schemas.ts && npx prettier --write src/protocol.ts"
   },
   "dependencies": {
     "hono": "^4.12.34",

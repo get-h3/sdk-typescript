@@ -118,22 +118,23 @@ regenerate + prettier must yield zero diff on `src/protocol.ts`.
 
 #### `.schemas-changed` sentinel lifecycle
 
-The generator writes a gitignored sentinel file (`.schemas-changed`, repo root)
-when the regenerated output differs from `src/protocol.ts`, and removes it when
-the output matches. CI (`sync-protocol.yml`) runs the generator in a fresh
-checkout and fails the schema-alignment check if the sentinel exists — that is
-the signal that `src/protocol.ts` must be committed.
+The generator (`scripts/generate-schemas.ts`) is the single owner of the
+gitignored `.schemas-changed` sentinel (repo root). Every successful run (exit
+0) clears the flag unconditionally — it never leaves a stale `.schemas-changed`
+containing `true` behind, no matter how it was invoked. The flag is therefore
+only meaningful *while a generation is in progress*; it is not a persistent
+signal of pending work.
 
-`npm run generate` clears the sentinel automatically after a successful run, so
-a leftover `.schemas-changed` containing `true` after a completed regen + commit
-is a stale flag, not pending work. If you invoke
-`npx tsx scripts/generate-schemas.ts` directly instead (e.g. with
-`--protocol-dir`), delete the sentinel yourself after committing the regenerated
-`src/protocol.ts`:
+CI (`sync-protocol.yml`) does not consult the sentinel. The schema-alignment
+check runs the generator against a fresh checkout of `get-h3/protocol` and
+fails if `git diff src/protocol.ts` is non-empty — the tracked file is the
+ground truth for alignment.
 
-```bash
-rm -f .schemas-changed
-```
+`npm run generate` is the blessed path: it regenerates, prettifies
+`src/protocol.ts`, and the generator clears the sentinel. Invoking
+`npx tsx scripts/generate-schemas.ts` directly (e.g. with `--protocol-dir`) is
+also safe — a successful run won't leave a stale flag, so no manual cleanup is
+needed after committing the regenerated `src/protocol.ts`.
 
 Never commit the sentinel — it is gitignored by design and only meaningful on a
 local checkout or in CI's fresh clone.
