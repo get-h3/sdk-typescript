@@ -115,3 +115,7 @@ jobs:
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  roundtrip:
+    needs: check-schema-alignment
+    uses: get-h3/h3/.github/workflows/roundtrip.yml@main
