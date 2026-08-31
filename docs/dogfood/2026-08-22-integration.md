@@ -2,14 +2,14 @@
 
 **Project:** `@get-h3/h3-harness-sdk` (get-h3/sdk-typescript)
 **Verdict:** 🟢 SHIPPABLE — all three traps from the 2026-08-14 run (GAP-033/034/036) are CLOSED and proven live; the happy path is fully green. Remaining blocker is distribution-only (GAP-001 npm publish).
-**Run type:** Library consumer — fresh project in `/tmp/dogfood-h3-ts-2026-08-22`, installed via the documented GitHub route, built a from-scratch **tool-calling calculator harness**, served it, ran the full HTTP lifecycle, MockHermes, and the official `h3-test` battery (44/44).
+**Run type:** Library consumer — fresh project in `/tmp/dogfood-h3-ts-2026-08-22`, installed via the documented GitHub route, built a from-scratch **tool-calling calculator harness**, served it, ran the full HTTP lifecycle, MockHermes, and the official `h3-test` battery (45/45).
 
 ## The promise (null hypothesis)
 
 > `npm install github:get-h3/sdk-typescript` → implement the `Harness` interface → `createH3Router()` →
-> serve on :9191 → **44/44 h3-test compliant**. (npm route once published — GAP-001.)
+> serve on :9191 → **45/45 h3-test compliant**. (npm route once published — GAP-001.)
 
-**Reality: the promise HOLDS, cleanly.** Install worked first try (7.5s), the `prepare` script built `dist/`, all 40 exports load, the from-scratch calculator harness passed the full lifecycle AND the battery 44/44 in 0.18s. The three traps that made the last report "PROMISING-BUT-ROUGH" are all fixed in the shipped package — each verified live against the GitHub-installed build (details below). This is the first post-fix record; it supersedes the 2026-08-14 verdict.
+**Reality: the promise HOLDS, cleanly.** Install worked first try (7.5s), the `prepare` script built `dist/`, all 40 exports load, the from-scratch calculator harness passed the full lifecycle AND the battery 45/45 in 0.18s. The three traps that made the last report "PROMISING-BUT-ROUGH" are all fixed in the shipped package — each verified live against the GitHub-installed build (details below). This is the first post-fix record; it supersedes the 2026-08-14 verdict.
 
 ## What I built (the working consumer)
 
@@ -27,7 +27,7 @@ Installed package: `version 0.1.0`, `main: dist/index.js`, `type: module` (ESM-o
 
 ## Time-to-first-success
 
-**~5 minutes** (install 7.5s → harness ~3 min → lifecycle + MockHermes → serve → battery 44/44). Friction count: **0** product defects hit (one consumer-side stumble: `MockHermes` takes the harness in its constructor — documented in its docstring, not a defect). Compare 2026-08-14: ~8 min / 6 frictions; 2026-08-04: ~25 min / 3 blocking install failures.
+**~5 minutes** (install 7.5s → harness ~3 min → lifecycle + MockHermes → serve → battery 45/45). Friction count: **0** product defects hit (one consumer-side stumble: `MockHermes` takes the harness in its constructor — documented in its docstring, not a defect). Compare 2026-08-14: ~8 min / 6 frictions; 2026-08-04: ~25 min / 3 blocking install failures.
 
 ## Verified working (evidence checklist — every line is a command I ran)
 
@@ -40,7 +40,7 @@ Installed package: `version 0.1.0`, `main: dist/index.js`, `type: module` (ESM-o
 - `POST /v1/cancel` on real session → `{session_id, cancelled:true}` ✅
 - Invalid JSON → 400 `INVALID_REQUEST` with readable message ✅
 - `MockHermes`: `sendMessage` → `sendResult` → `cancel`; harness observed the SAME `session_id` on both process and result calls — one sessionId threaded ✅
-- `h3-test`: **44/44 PASSED**, exit 0, 0.18s, p50 0.92ms / p95 23.88ms ✅
+- `h3-test`: **45/45 PASSED**, exit 0, 0.18s, p50 0.92ms / p95 23.88ms ✅
 
 ## Trap closeouts (the 2026-08-14 blockers — all closed, proven live)
 
@@ -61,7 +61,7 @@ Previously (08-14): same harness got **HTTP 200 with the malformed tool_call pas
 - README "Wire Shapes" now shows `tool_call: { "name": "read_file", "params": {...}, "reasoning": "..." }` — no `tool_name`/`arguments`/`call_id` anywhere.
 - Installed `ToolCallSchema` = `{name (req), params (req), reasoning (opt)}` — matches the doc.
 - The battery enforces it: `test_battery.py` `test_3_2_decision_tool_call_valid_name` fails with `"tool_call decision missing 'name'"` when `tc['name']` is absent.
-- **Live proof:** my harness used `{name:'calculator', params:{expression}}` and passed 44/44; the 08-04-doc shape was rejected by the router (see GAP-033's 500 — the exact error a JS consumer gets today instead of a silent pass-through).
+- **Live proof:** my harness used `{name:'calculator', params:{expression}}` and passed 45/45; the 08-04-doc shape was rejected by the router (see GAP-033's 500 — the exact error a JS consumer gets today instead of a silent pass-through).
 
 ### GAP-036 — CLOSED: README Defaults paragraph now matches reality
 
@@ -82,11 +82,11 @@ No unexpected errors. No SDK source changes were needed or made.
 
 1. **GAP-001 (P0, the only open blocker to SHIPPABLE-as-published):** publish to npm — the GitHub route is solid, the tarball is clean, the SDK is compliant; `npm install @get-h3/h3-harness-sdk` 404s today.
 2. **GAP-005 (minor DX):** consider having `MockHermes.cancel()` return `{session_id, cancelled}` for symmetry with the HTTP response — currently it returns the harness's raw `onCancel` value (`true`), which is fine but asymmetric.
-3. No new gaps found. The 08-14 friction list (GAP-033..038) is fully resolved; battery exit code 0 with 44/44 across all 6 categories.
+3. No new gaps found. The 08-14 friction list (GAP-033..038) is fully resolved; battery exit code 0 with 45/45 across all 6 categories.
 
 ## Verdict evidence
 
-- **Works:** yes — install → harness → full lifecycle → 44/44 compliance, all from a fresh consumer project via the documented GitHub route.
+- **Works:** yes — install → harness → full lifecycle → 45/45 compliance, all from a fresh consumer project via the documented GitHub route.
 - **Useful:** yes — H3 compliance is a real, testable gate; MockHermes testbed works; structured errors name the exact broken field.
 - **Usable:** yes for a fresh user via the GitHub route — Quickstart pattern compiles/runs as documented, wire shapes in the README match the schemas, required-vs-defaulted fields are explicit. Time-to-first-success ~5 min, zero product friction.
-- **Trustworthy:** yes — 44/44 battery, 40/40 exports, strict Zod validation on requests AND decisions (GAP-033), fast (p50 0.92ms).
+- **Trustworthy:** yes — 45/45 battery, 40/40 exports, strict Zod validation on requests AND decisions (GAP-033), fast (p50 0.92ms).

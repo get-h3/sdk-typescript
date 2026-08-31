@@ -2,14 +2,14 @@
 
 **Project:** `@get-h3/h3-harness-sdk` (get-h3/sdk-typescript)
 **Verdict:** 🟡 PROMISING-BUT-ROUGH
-**Run type:** Library consumer — a real harness built from scratch in `/tmp/dogfood-h3-sdk-typescript`, served over HTTP, verified with the official `h3-test` compliance battery (44 tests).
+**Run type:** Library consumer — a real harness built from scratch in `/tmp/dogfood-h3-sdk-typescript`, served over HTTP, verified with the official `h3-test` compliance battery (45 tests).
 
 ## The promise
 
 > "TypeScript SDK for building H3-compliant agent harnesses. Works with Node, Bun, Deno." — README
 > `npm install @get-h3/h3-harness-sdk` → implement the `Harness` interface → `createH3Router()` → H3-compliant.
 
-**Reality:** the SDK core delivers on the promise (a from-scratch harness passed 44/44 compliance in ~15 min of work) — but the **distribution story is broken**: the npm install command 404s and the git-install path ships an unimportable package. A real user cannot get the code by any documented route today.
+**Reality:** the SDK core delivers on the promise (a from-scratch harness passed 45/45 compliance in ~15 min of work) — but the **distribution story is broken**: the npm install command 404s and the git-install path ships an unimportable package. A real user cannot get the code by any documented route today.
 
 ## What I built (the working consumer)
 
@@ -33,7 +33,7 @@ npm init -y
 npm install /path/to/sdk-typescript hono @hono/node-server
 ```
 
-## The harness (works, 44/44)
+## The harness (works, 45/45)
 
 > **Shape update (2026-08-14):** the `tool_call` wire shape below was updated.
 > The obsolete `tool_name`,
@@ -129,8 +129,8 @@ GET/DELETE /v1/sessions/sess-003 → session status / { terminated: true }
 
 | Target | Result |
 |---|---|
-| My consumer harness (from scratch, ~15 min) | 44/44 PASSED (0.22s, p50 1.09ms) — after adding partial-turn handling |
-| SDK's own `dist/examples/echo.js` | 44/44 PASSED — the reference implementation |
+| My consumer harness (from scratch, ~15 min) | 45/45 PASSED (0.22s, p50 1.09ms) — after adding partial-turn handling |
+| SDK's own `dist/examples/echo.js` | 45/45 PASSED — the reference implementation |
 | Repo unit suite (sanity) | 134/134 in 351ms |
 
 Latency p50 ≈ 1.1–1.6ms — the router is fast.
@@ -152,7 +152,7 @@ Latency p50 ≈ 1.1–1.6ms — the router is fast.
 
 ## Verdict evidence
 
-- **Works:** yes — full lifecycle + 44/44 compliance from a fresh consumer.
+- **Works:** yes — full lifecycle + 45/45 compliance from a fresh consumer.
 - **Useful:** yes — H3 compliance is a real, testable gate; MockHermes testbed is genuinely handy.
 - **Usable:** no for a fresh user — every documented install route fails; the Quickstart is copy-paste broken; wire shapes undocumented. Time-to-first-success for me: ~25 min including workarounds (~5 min once GAP-001..003 land).
-- **Trustworthy:** yes — 134/134 unit tests verified, 44/44 battery on two harnesses, strict validation, structured errors, fast.
+- **Trustworthy:** yes — 134/134 unit tests verified, 45/45 battery on two harnesses, strict validation, structured errors, fast.

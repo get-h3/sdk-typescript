@@ -551,7 +551,7 @@ See the [Echo Harness](#echo-harness) example for the exact pattern.
 
 ### Echo Harness
 
-The **compliance reference** for the h3-test battery (44/44): it implements
+The **compliance reference** for the h3-test battery (45/45): it implements
 partial-turn handling, so `text.finished` is `false` when the user's message
 indicates the thought is not complete:
 

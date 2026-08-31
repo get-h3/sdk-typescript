@@ -103,7 +103,7 @@ validated**: `DecisionSchema` is imported in `src/harness.ts` but only re-export
 it never wired `safeParse` into the router. Consequence (reproduced live): a harness returning
 `tool_call: {tool_name, arguments, call_id}` gets HTTP 200 with the garbage shape passed through verbatim.
 `INVALID_DECISION` (README errors table) is unreachable dead documentation. Battery tool_call tests are
-*optional* (pass when the harness returns another decision type), so a broken-shape harness still goes 44/44
+*optional* (pass when the harness returns another decision type), so a broken-shape harness still goes 45/45
 green. **This is the exact "all tests green, reality broken" pattern** the dogfood loop exists to catch.
 
 ## Why the shape changed under everyone's feet
@@ -137,7 +137,7 @@ minimal bodies 400 with a raw Zod wall. Docs should say: objects required, field
 ## The right way (updated 2026-08-14)
 
 1. Fresh consumer → `npm install github:get-h3/sdk-typescript` (works, 7s) → implement Harness with
-   `tool_call: {name, params}` (NOT the 08-04 doc's shape) → serve on :9191 → `h3-test` must be 44/44.
+   `tool_call: {name, params}` (NOT the 08-04 doc's shape) → serve on :9191 → `h3-test` must be 45/45.
 2. Always send `identity` + `context` with `config:{}` and `session_state:{}` present.
 3. If you want runtime decision guarantees before GAP-033 lands, `.parse()` your decisions with the exported
    Zod schemas in the harness.

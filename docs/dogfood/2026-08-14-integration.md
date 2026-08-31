@@ -4,15 +4,15 @@
 **Verdict:** 🟡 PROMISING-BUT-ROUGH (close to SHIPPABLE — happy path proven, two real traps remain)
 **Run type:** Library consumer — fresh project in `/tmp/dogfood-h3-ts-2026-08-14`, installed via the documented
 GitHub route, built a from-scratch **tool-calling calculator harness**, served it, ran the full HTTP lifecycle,
-MockHermes, and the official `h3-test` battery (44/44).
+MockHermes, and the official `h3-test` battery (45/45).
 
 ## The promise (null hypothesis)
 
 > `npm install github:get-h3/sdk-typescript` → implement the `Harness` interface → `createH3Router()` →
-> serve on :9191 → **44/44 h3-test compliant**. (npm route once published — GAP-001.)
+> serve on :9191 → **45/45 h3-test compliant**. (npm route once published — GAP-001.)
 
 **Reality: the promise HOLDS.** Install worked first try (7s), the Quickstart pattern compiled and ran, and a
-harness I wrote from scratch (not the repo's echo) passed 44/44 in 0.23s. This is a big step up from the
+harness I wrote from scratch (not the repo's echo) passed 45/45 in 0.23s. This is a big step up from the
 2026-08-04 run (where every install route failed and the Quickstart was copy-paste broken).
 
 ## What I built (the working consumer)
@@ -33,7 +33,7 @@ so the battery's `process_text_finished_false` region passes. Full source mirror
 
 ## Time-to-first-success
 
-**~8 minutes** (install 7s → harness ~5 min → MockHermes pass → serve → battery 44/44). Friction count: **6**
+**~8 minutes** (install 7s → harness ~5 min → MockHermes pass → serve → battery 45/45). Friction count: **6**
 (all documented as GAP-033..038). Compare 2026-08-04: ~25 min with 3 blocking install/quickstart failures.
 
 ## Verified working (evidence)
@@ -45,7 +45,7 @@ so the battery's `process_text_finished_false` region passes. Full source mirror
 - `GET /v1/sessions/:id` → full SessionResponse (turn_count, current_decision_type...) ✅
 - Invalid JSON → 400 `INVALID_REQUEST` with readable message ✅
 - `MockHermes`: sendMessage → sendResult → cancel, one sessionId threaded ✅
-- `h3-test`: **44/44 PASSED**, 0.23s, p50 1.02ms ✅
+- `h3-test`: **45/45 PASSED**, 0.23s, p50 1.02ms ✅
 
 ## The two traps (what a new user WILL hit)
 
