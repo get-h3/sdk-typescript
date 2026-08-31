@@ -74,14 +74,14 @@ function errorResponse(
 export function createH3Router(harness: Harness): Hono {
   const app = new Hono();
 
-  // Track per-session state seen via /v1/process
+  // Track per-session state seen via /v1/process and /v1/result
   const sessions = new Map<
     string,
     {
       started_at: string;
       last_active: string;
       turn_count: number;
-      status: "active";
+      status: "active" | "completed" | "cancelled";
       current_decision: string;
       current_decision_type:
         "tool_call" | "llm_call" | "text" | "wait" | "delegate" | "end";
@@ -107,22 +107,26 @@ export function createH3Router(harness: Harness): Hono {
     // Track the session: first process creates it, subsequent ones increment.
     // current_decision/current_decision_type always mirror the last decision
     // returned to the client (success or synthesized error decision).
+    // GAP-DOG-003 parity: an end decision transitions the session to
+    // "completed" (battery test_5_11_session_status_completed asserts it).
     const recordSession = (
       decision: Pick<Decision, "decision" | "decision_id">,
     ) => {
       const now = new Date().toISOString();
       const existing = sessions.get(req.session_id);
       if (existing) {
+        if (existing.status === "cancelled") return;
         existing.turn_count += 1;
         existing.last_active = now;
         existing.current_decision = decision.decision_id;
         existing.current_decision_type = decision.decision;
+        if (decision.decision === "end") existing.status = "completed";
       } else {
         sessions.set(req.session_id, {
           started_at: now,
           last_active: now,
           turn_count: 1,
-          status: "active",
+          status: decision.decision === "end" ? "completed" : "active",
           current_decision: decision.decision_id,
           current_decision_type: decision.decision,
         });
@@ -187,7 +191,19 @@ export function createH3Router(harness: Harness): Hono {
           "INVALID_DECISION",
         );
       }
-      return c.json(parsed.data);
+      const decision = parsed.data;
+      // Record the result round-trip: refresh last_active, increment
+      // turn_count, and transition to "completed" on an end decision
+      // (GAP-DOG-003 parity — battery test_5_11 asserts status after END).
+      const existing = sessions.get(req.session_id);
+      if (existing && existing.status !== "cancelled") {
+        existing.turn_count += 1;
+        existing.last_active = new Date().toISOString();
+        existing.current_decision = decision.decision_id;
+        existing.current_decision_type = decision.decision;
+        if (decision.decision === "end") existing.status = "completed";
+      }
+      return c.json(decision);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({
@@ -216,6 +232,10 @@ export function createH3Router(harness: Harness): Hono {
     if (harness.onCancel) {
       try {
         const cancelled = await harness.onCancel(req);
+        // GAP-028 parity: cancelled is terminal — mark the session so late
+        // process/result calls don't rewrite lifecycle state.
+        const existing = sessions.get(req.session_id);
+        if (existing) existing.status = "cancelled";
         return c.json({ session_id: req.session_id, cancelled });
       } catch (err) {
         return errorResponse(
@@ -225,6 +245,8 @@ export function createH3Router(harness: Harness): Hono {
         );
       }
     }
+    const existing = sessions.get(req.session_id);
+    if (existing) existing.status = "cancelled";
     return c.json({ session_id: req.session_id, cancelled: true });
   });
 

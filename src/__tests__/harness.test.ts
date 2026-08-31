@@ -619,6 +619,57 @@ describe("GET /v1/sessions/:session_id", () => {
     const body = await res.json();
     expect(body.error.code).toBe("SESSION_NOT_FOUND");
   });
+
+  it("transitions status to completed after an end decision via /v1/result (battery test_5_11)", async () => {
+    const app = makeApp(makeHarness());
+
+    // Create the session via /v1/process (text decision keeps it active).
+    const processRes = await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-completed",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
+    expect(processRes.status).toBe(200);
+    const processBody = await processRes.json();
+    expect(processBody.decision).toBe("text");
+
+    // Drive the result round-trip; the default harness returns an end decision.
+    const resultRes = await app.request("/v1/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-completed",
+        decision_id: processBody.decision_id,
+        result: { type: "text_sent", data: { finished: true }, success: true },
+      }),
+    });
+    expect(resultRes.status).toBe(200);
+    const resultBody = await resultRes.json();
+    expect(resultBody.decision).toBe("end");
+
+    const res = await app.request("/v1/sessions/ses-completed");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("completed");
+    expect(body.turn_count).toBe(2);
+    expect(body.current_decision_type).toBe("end");
+  });
 });
 
 // ── DELETE /v1/sessions/:session_id ──────────────────────────────────
