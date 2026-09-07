@@ -126,6 +126,53 @@ got a `tool_call` decision example, so the stale doc remained the only in-repo e
 omits them. README's "Defaults:" paragraph lists inner-field defaults, which reads as "you may omit these" →
 minimal bodies 400 with a raw Zod wall. Docs should say: objects required, fields default.
 
+## 2026-09-06 run (#4) — where the battery doesn't look
+
+Third follow-up dogfood run. The 08-14 fixes all held: GitHub install 6.7s,
+quickstart patterns compile clean under strict tsc, GAP-033 decision
+validation is live (INVALID_REQUEST errors are path-pinned and precise —
+they name `["identity","chat_id"]` and `["context","config"]` exactly),
+GAP-037's DELETE-unknown-404 is verified live, and a **custom** harness
+(standup bot: partial turns + history echo + real tool_call roundtrip +
+identity greeting) passed the battery **46/46 first try** (the battery has
+grown 44→45→46; README still says 45 in one spot).
+
+The new bugs live one step past what the battery exercises:
+
+1. **DELETE never deletes (GAP-050, P0).** The router's DELETE handler
+   checks `sessions.has()`, awaits `onSessionTerminate`, returns
+   `{terminated:true}` — and never calls `sessions.delete(sessionId)`. So
+   the session survives forever: GET afterwards returns the full payload
+   (200), and a second DELETE re-fires `onSessionTerminate`. Exactly the
+   L3 gap: the battery has no GET-after-DELETE test, so 46/46 passes with
+   a broken contract. The 08-14 "DELETE unknown → 404" fix (GAP-037) was
+   real — but it only made the unknown-id path consistent; the happy path
+   is the broken one.
+2. **Result auto-vivifies sessions (GAP-051, P1).** The result handler
+   guards state updates with `if (existing)` — a truthiness check that
+   cannot distinguish "never created" from "exists" (values are plain
+   objects). Result on an unknown session returns 200 while every other
+   session endpoint 404s. Also verified: SDK-side turn_count increments
+   twice per tool_call roundtrip (process + result).
+3. **chat_id required but undocumented (GAP-052, P2).** My hand-built
+   client (built from the README prose, not the example) 400'd on missing
+   `identity.chat_id`; the error message itself is excellent (path-pinned).
+4. **history required in TS type, defaulted in schema (GAP-053, P2).**
+   `DecisionSchema` has `history: z.array(...).default([])` but the
+   inferred TS type makes it mandatory — pure boilerplate every harness
+   carries.
+
+Right-way additions for this run: **test session lifecycle past the
+battery** (DELETE→GET must 404; result-to-unknown must be deliberate), and
+when building a client from docs, expect one 400 roundtrip — then read the
+error, which reliably names the offending path.
+
+Infra note: the ephemeral-bunker install leg SKIPPED — bunker3 spawn
+failed with `tar: No space left on device` (host root at 100%, 221G; 269
+stale agent users but /home is only 570M, so the space hog needs root
+forensics). Clean-machine install proof was done via a fresh
+node:22-bookworm container instead (install → smoke OK).
+
 ## Errors hit during this run (each = a GAP task)
 
 1. `400 INVALID_REQUEST: expected object at context.config / context.session_state` — omitted required objects → GAP-036.
