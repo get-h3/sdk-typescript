@@ -178,6 +178,13 @@ export function createH3Router(harness: Harness): Hono {
         `Invalid request: ${(err as Error).message}`,
       );
     }
+    // GAP-051: unknown sessions return 404 SESSION_NOT_FOUND — the OpenAPI
+    // spec documents SessionNotFound for /v1/result and sdk-go's
+    // resultHandler 404s before calling OnResult. Never auto-vivify an
+    // unknown session or silently advance its turn_count.
+    if (!sessions.has(req.session_id)) {
+      return errorResponse(c, 404, `Session ${req.session_id} not found`);
+    }
     try {
       const rawDecision = await harness.onResult(req);
       const parsed = DecisionSchema.safeParse(rawDecision);
@@ -293,6 +300,11 @@ export function createH3Router(harness: Harness): Hono {
         );
       }
     }
+    // GAP-050: DELETE must actually remove the session — sdk-go's
+    // deleteSessionHandler calls sessions.delete() after the terminate
+    // callback; without this, GET /v1/sessions/:id still returns 200
+    // for a "terminated" session.
+    sessions.delete(sessionId);
     return c.json({ session_id: sessionId, terminated: true });
   });
 

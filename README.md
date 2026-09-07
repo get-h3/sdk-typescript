@@ -314,7 +314,7 @@ Response (`200`) — a `Decision`. `history` is echoed back from `context.histor
 }
 ```
 
-`result.type` is one of `tool_result`, `llm_response`, `text_sent`, `delegate_result`, `wait_timeout`, `error`. Response (`200`) — a `Decision` (same shape as above).
+`result.type` is one of `tool_result`, `llm_response`, `text_sent`, `delegate_result`, `wait_timeout`, `error`. Response (`200`) — a `Decision` (same shape as above). Unknown sessions return `404` with a `SESSION_NOT_FOUND` error (consistent with `GET /v1/sessions/:id`, `DELETE /v1/sessions/:id`, and `POST /v1/cancel`).
 
 #### `POST /v1/cancel` — `CancelRequest`
 

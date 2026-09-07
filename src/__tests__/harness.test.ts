@@ -202,6 +202,29 @@ describe("POST /v1/result", () => {
 
   it("processes a valid result and returns a decision", async () => {
     const app = makeApp(makeHarness());
+    // GAP-051: /v1/result requires an existing session (404 otherwise) —
+    // create it via /v1/process first, mirroring the battery flow.
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-abc",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
     const res = await app.request("/v1/result", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -212,6 +235,21 @@ describe("POST /v1/result", () => {
     const body = await res.json();
     expect(body.decision).toBe("end");
     expect(body.end.reason).toBe("task_complete");
+  });
+
+  it("returns 404 SESSION_NOT_FOUND for an unknown session (GAP-051)", async () => {
+    // OpenAPI documents SessionNotFound for /v1/result; sdk-go 404s before
+    // calling OnResult. An unknown session must not be auto-vivified.
+    const app = makeApp(makeHarness());
+    const res = await app.request("/v1/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validResultBody),
+    });
+    expect(res.status).toBe(404);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("SESSION_NOT_FOUND");
   });
 
   it("returns 400 for invalid body", async () => {
@@ -232,6 +270,28 @@ describe("POST /v1/result", () => {
         },
       }),
     );
+    // GAP-051: create the session first — /v1/result 404s unknown sessions.
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-abc",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
 
     const res = await app.request("/v1/result", {
       method: "POST",
@@ -256,6 +316,28 @@ describe("POST /v1/result", () => {
           }) as unknown as Decision,
       }),
     );
+    // GAP-051: create the session first — /v1/result 404s unknown sessions.
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-abc",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
 
     const res = await app.request("/v1/result", {
       method: "POST",
@@ -770,5 +852,29 @@ describe("DELETE /v1/sessions/:session_id", () => {
       method: "DELETE",
     });
     expect(res.status).toBe(500);
+  });
+
+  it("removes the session so GET returns 404 afterwards (GAP-050)", async () => {
+    const app = makeApp(makeHarness());
+    await createSession(app);
+
+    // GET before DELETE: session exists.
+    const before = await app.request("/v1/sessions/ses-abc");
+    expect(before.status).toBe(200);
+
+    const del = await app.request("/v1/sessions/ses-abc", {
+      method: "DELETE",
+    });
+    expect(del.status).toBe(200);
+    const delBody = await del.json();
+    expect(delBody.terminated).toBe(true);
+
+    // GAP-050: DELETE must actually remove the session — a follow-up GET
+    // must 404 SESSION_NOT_FOUND (sdk-go parity: deleteSessionHandler
+    // calls sessions.delete() after the terminate callback).
+    const after = await app.request("/v1/sessions/ses-abc");
+    expect(after.status).toBe(404);
+    const afterBody = await after.json();
+    expect(afterBody.error.code).toBe("SESSION_NOT_FOUND");
   });
 });
