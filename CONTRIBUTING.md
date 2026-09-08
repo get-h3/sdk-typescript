@@ -26,7 +26,7 @@ sdk-typescript/
 │   ├── testbed.ts           # MockHermes for vitest/jest
 │   ├── index.ts             # Public exports
 │   └── examples/
-│       ├── echo.ts          # Battery-passing echo harness (h3-test 44/44)
+│       ├── echo.ts          # Battery-passing echo harness (h3-test 46/46)
 │       └── minimal.ts       # Bare-minimum example
 ├── src/__tests__/           # 6 test files, 144 tests (harness, index, middleware,
 │                            #   protocol, schema-validation, testbed)
@@ -59,7 +59,7 @@ npx prettier --check 'src/**/*.ts'
 
 ### Run the Test Battery
 
-The h3-test compliance battery (44 tests, exit code 0 = H3-compliant) runs
+The h3-test compliance battery (46 tests, exit code 0 = H3-compliant) runs
 against a live harness endpoint. The compliance reference implementation is
 `src/examples/echo.ts` — it implements the `finished: false` partial-turn
 semantics the battery requires:
@@ -73,7 +73,7 @@ PORT=9876 npx tsx src/examples/echo.ts
 
 # In another terminal, run the compliance test battery:
 h3-test --endpoint http://localhost:9191
-# 44 compliance tests, exit code 0 = compliant
+# 46 compliance tests, exit code 0 = compliant
 ```
 
 ## Making Changes
@@ -160,7 +160,7 @@ npx prettier --check 'src/**/*.ts'
 GitHub Actions runs on every push/PR to `main`:
 
 1. `build-and-test` (Node 20/22 matrix): `tsc --noEmit`, build, dist import smoke, vitest
-2. `e2e-battery` (Node 22): starts `src/examples/echo.ts` on :9191 and runs `h3-test --endpoint http://localhost:9191` — gates on 44/44
+2. `e2e-battery` (Node 22): starts `src/examples/echo.ts` on :9191 and runs `h3-test --endpoint http://localhost:9191` — gates on 46/46
 
 All must pass.
 
@@ -184,7 +184,7 @@ git push origin v1.0.0
 - [ ] `npm test` passes (144 tests)
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npx prettier --check 'src/**/*.ts'` passes
-- [ ] `h3-test --endpoint http://localhost:9191` passes 44/44 against `src/examples/echo.ts`
+- [ ] `h3-test --endpoint http://localhost:9191` passes 46/46 against `src/examples/echo.ts`
 - [ ] New Zod fields use `.optional()` where appropriate
 - [ ] Protocol changes regenerated via `scripts/generate-schemas.ts` and prettier-normalized
 - [ ] No hand-edits to generated schemas
