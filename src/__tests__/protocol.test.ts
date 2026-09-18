@@ -490,6 +490,30 @@ describe("DecisionSchema", () => {
     expect(result.decision_id).toBeDefined(); // UUID default
   });
 
+  it("still defaults history to [] at runtime (GAP-053 type-only change)", () => {
+    // GAP-053 relaxes the Decision OUTPUT TYPE (`history?`) so harnesses are
+    // not forced to spell out `history: []`. The Zod runtime default is
+    // untouched: a parsed decision still carries history: [].
+    const result = DecisionSchema.parse({
+      decision: "text",
+      decision_id: "00000000-0000-4000-8000-000000000007",
+      text: { content: "x", finished: true },
+    });
+    expect(result.history).toEqual([]);
+  });
+
+  it("accepts a caller-provided history (GAP-053 optional output)", () => {
+    // Optional output accepts provided values — existing callers that pass
+    // `history: [...]` keep working unchanged.
+    const result = DecisionSchema.parse({
+      decision: "text",
+      decision_id: "00000000-0000-4000-8000-000000000008",
+      history: [{ role: "user", content: "hi" }],
+      text: { content: "x", finished: true },
+    });
+    expect(result.history).toEqual([{ role: "user", content: "hi" }]);
+  });
+
   it("rejects invalid decision type", () => {
     expect(() => DecisionSchema.parse({ decision: "invalid" })).toThrow();
   });

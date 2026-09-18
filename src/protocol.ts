@@ -355,4 +355,6 @@ export const DecisionSchema = z.object({
   delegate: DelegateSchema.optional(),
   end: EndSchema.optional(),
 });
-export type Decision = z.infer<typeof DecisionSchema>;
+export type Decision = Omit<z.infer<typeof DecisionSchema>, "history"> & {
+  history?: HistoryEntry[];
+};

@@ -671,7 +671,9 @@ function generate(files: SchemaFile[], protocolDir: string): string {
       "Decision",
     );
     lines.push(`export const DecisionSchema = ${baseZod};`);
-    lines.push(`export type Decision = z.infer<typeof DecisionSchema>;`);
+    lines.push(
+      `export type Decision = Omit<z.infer<typeof DecisionSchema>, "history"> & { history?: HistoryEntry[] };`,
+    );
     lines.push(``);
   }
 
