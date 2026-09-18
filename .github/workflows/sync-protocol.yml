@@ -1,12 +1,47 @@
 name: Sync Protocol
 
 on:
+  # GAP-073: an SDK source change must exercise the cross-language round-trip,
+  # not only a protocol dispatch. Before this, a wire-format-breaking change to
+  # src/ shipped with every workflow green and zero round-trip runs. Paths are
+  # scoped to the files that can change the SDK's wire behaviour (src/ includes
+  # the generated src/protocol.ts); board/.vfs/.gitreins bookkeeping and prose
+  # docs are excluded, so a foreman bookkeeping commit cannot fire it.
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vitest.config.ts"
+      - ".github/workflows/sync-protocol.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vitest.config.ts"
+      - ".github/workflows/sync-protocol.yml"
   repository_dispatch:
     types: [schema-updated]
   workflow_dispatch:
 
 jobs:
   check-schema-alignment:
+    # GAP-073: this job regenerates src/protocol.ts from get-h3/protocol@main
+    # and FAILS when the generated output differs from the committed file. That
+    # is a protocol-sync precondition, not an SDK-source check: on a push or PR
+    # it both duplicates ci.yml and turns any upstream protocol drift into a
+    # failure that skips the round-trip job it `needs:` — the exact hole this
+    # task closes. Keep it pinned to the events it was written for; the
+    # round-trip job runs for every event. (The `release` job already gates on
+    # workflow_dispatch, so its `needs:` is unaffected.)
+    if: ${{ github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -117,5 +152,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   roundtrip:
+    # GAP-073: unchanged for repository_dispatch/workflow_dispatch — a failed
+    # schema-alignment check still blocks the round-trip — but a SKIPPED
+    # check-schema-alignment (the push/pull_request path) must not.
     needs: check-schema-alignment
+    if: ${{ !cancelled() && (needs.check-schema-alignment.result == 'success' || needs.check-schema-alignment.result == 'skipped') }}
     uses: get-h3/h3/.github/workflows/roundtrip.yml@main
