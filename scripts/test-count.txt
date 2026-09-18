@@ -1,0 +1,13 @@
+# Canonical counts for get-h3/sdk-typescript — policed by
+# scripts/check-test-count.sh (H3-GAP-087). Change a number here ONLY in the
+# same commit that corrects every prose line the guard names.
+#
+# battery = the get-h3/shim compliance battery (`h3-test`): every "N/N compliant"
+#           claim in this repo is about this number. The shim owns the value;
+#           the guard cross-checks it against ../shim/scripts/test-count.txt when
+#           that checkout is present.
+# suite   = this repo's own vitest suite, one `it(`/`test(` case per line in the
+#           files vitest.config.ts includes (`src/**/*.test.ts`); `npx vitest
+#           run` prints the same number.
+battery=46
+suite=165

@@ -36,6 +36,7 @@
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify-counts": "sh scripts/check-test-count.sh",
     "lint": "tsc --noEmit",
     "fmt": "prettier --write 'src/**/*.ts'",
     "clean": "rm -rf dist node_modules",

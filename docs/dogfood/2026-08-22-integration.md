@@ -1,5 +1,10 @@
 # Dogfood Integration Report — 2026-08-22
 
+> **Historical (2026-08-22):** point-in-time dogfood record — the vitest and
+> compliance-battery counts quoted below were correct when written and are **not
+> live status**. The canonical counts this repo enforces live in
+> `scripts/test-count.txt`, checked by `scripts/check-test-count.sh`.
+
 **Project:** `@get-h3/h3-harness-sdk` (get-h3/sdk-typescript)
 **Verdict:** 🟢 SHIPPABLE — all three traps from the 2026-08-14 run (GAP-033/034/036) are CLOSED and proven live; the happy path is fully green. Remaining blocker is distribution-only (GAP-001 npm publish).
 **Run type:** Library consumer — fresh project in `/tmp/dogfood-h3-ts-2026-08-22`, installed via the documented GitHub route, built a from-scratch **tool-calling calculator harness**, served it, ran the full HTTP lifecycle, MockHermes, and the official `h3-test` battery (45/45).

@@ -1,5 +1,10 @@
 # Dogfood Integration Report — 2026-08-14
 
+> **Historical (2026-08-14):** point-in-time dogfood record — the vitest and
+> compliance-battery counts quoted below were correct when written and are **not
+> live status**. The canonical counts this repo enforces live in
+> `scripts/test-count.txt`, checked by `scripts/check-test-count.sh`.
+
 **Project:** `@get-h3/h3-harness-sdk` (get-h3/sdk-typescript)
 **Verdict:** 🟡 PROMISING-BUT-ROUGH (close to SHIPPABLE — happy path proven, two real traps remain)
 **Run type:** Library consumer — fresh project in `/tmp/dogfood-h3-ts-2026-08-14`, installed via the documented

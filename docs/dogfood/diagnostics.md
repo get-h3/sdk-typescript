@@ -1,5 +1,10 @@
 # Diagnostic Trail — H3 SDK TypeScript (dogfood 2026-08-04)
 
+> **Historical (2026-08-04):** point-in-time dogfood record — every test and
+> battery count cited below (vitest and h3-test alike) was correct when written
+> and is **not live status**. The canonical counts this repo enforces live in
+> `scripts/test-count.txt`, checked by `scripts/check-test-count.sh`.
+
 *How the SDK is built, why it's shaped that way, the errors found along the way (mine and the project's), and the right way to do things. This is the record that lets anyone later answer "does this actually work?" from the repo — not from test colors.*
 
 ## Architecture (how it's built)
@@ -16,7 +21,7 @@ src/
 dist/               # tsc build — GITIGNORED (the root cause of GAP-002)
 ```
 
-Design: thin, dependency-light (hono + zod only). Protocol types come from the OpenAPI source of truth in `get-h3/protocol` via a generator; `protocol.ts` is the generated artifact. The router validates every request with Zod and returns structured `ErrorResponse` JSON. The test battery (`h3-test` from `get-h3/shim`) is the real gate — 43 tests across health/process/decisions/results/errors/stress.
+Design: thin, dependency-light (hono + zod only). Protocol types come from the OpenAPI source of truth in `get-h3/protocol` via a generator; `protocol.ts` is the generated artifact. The router validates every request with Zod and returns structured `ErrorResponse` JSON. The test battery (`h3-test` from `get-h3/shim`) is the real gate — 46 tests across health/process/decisions/results/errors/stress.
 
 ## The errors I hit (2026-08-04) — and the right way
 

@@ -28,8 +28,8 @@ sdk-typescript/
 │   └── examples/
 │       ├── echo.ts          # Battery-passing echo harness (h3-test 46/46)
 │       └── minimal.ts       # Bare-minimum example
-├── src/__tests__/           # 6 test files, 144 tests (harness, index, middleware,
-│                            #   protocol, schema-validation, testbed)
+├── src/__tests__/           # 7 test files, 165 tests (harness, index, middleware,
+│                            #   protocol, schema-validation, testbed, test-count-guard)
 ├── scripts/
 │   └── generate-schemas.ts  # Regenerates src/protocol.ts from protocol schemas
 └── .github/workflows/       # CI: build-and-test + e2e-battery; protocol regeneration
@@ -41,7 +41,7 @@ sdk-typescript/
 
 ```bash
 npm test
-# vitest — 144 tests across 6 test files
+# vitest — 165 tests across 7 test files
 ```
 
 ### Run Type Check
@@ -151,7 +151,7 @@ local checkout or in CI's fresh clone.
 
 ```bash
 npx tsc --noEmit     # Type check
-npm test             # Tests (141)
+npm test             # Tests (165)
 npx prettier --check 'src/**/*.ts'
 ```
 
@@ -181,7 +181,7 @@ git push origin v1.0.0
 
 ## Review Checklist
 
-- [ ] `npm test` passes (144 tests)
+- [ ] `npm test` passes (165 tests)
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npx prettier --check 'src/**/*.ts'` passes
 - [ ] `h3-test --endpoint http://localhost:9191` passes 46/46 against `src/examples/echo.ts`

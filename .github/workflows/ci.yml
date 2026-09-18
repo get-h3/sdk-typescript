@@ -27,6 +27,14 @@ jobs:
           cache-dependency-path: sdk-typescript/package-lock.json
       - run: npm ci
         working-directory: sdk-typescript
+      # H3-GAP-087 — this repo polices its own count prose: canonical counts
+      # (scripts/test-count.txt) → the suite count derived from the files
+      # vitest.config.ts includes (`src/**/*.test.ts`) → battery parity against
+      # the checked-out shim → stale-literal sweep with explicit historical
+      # exemptions. Exit 1 (drift) / 2 (misconfigured) fail.
+      - name: Compliance-test count guard
+        run: sh scripts/check-test-count.sh
+        working-directory: sdk-typescript
       - run: npx tsc --noEmit
         working-directory: sdk-typescript
       - run: npm run build
