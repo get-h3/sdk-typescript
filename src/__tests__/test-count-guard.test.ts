@@ -43,6 +43,13 @@ const WORKFLOW = join(REPO_ROOT, ".github", "workflows", "ci.yml");
 /** A battery total the shim has retired (assembled, never literal here). */
 const retiredBattery = (): string => "4" + "5";
 
+/**
+ * A restated `key=<number>` literal, assembled at runtime. This file is itself a
+ * tracked `*.ts` surface that the guard sweeps, so it must never carry such a
+ * literal in its own source — including inside the fixtures it plants.
+ */
+const restated = (key: string, value: number): string => `${key}=${value}`;
+
 function readCanonical(): Record<string, number> {
   const found: Record<string, number> = {};
   for (const raw of readFileSync(CANON, "utf8").split("\n")) {
@@ -84,7 +91,11 @@ function scratchTree(suite: number): { root: string; canon: string } {
     "utf8",
   );
   const canon = join(root, "canon.txt");
-  writeFileSync(canon, `battery=46\nsuite=${suite}\n`, "utf8");
+  writeFileSync(
+    canon,
+    `${restated("battery", readCanonical().battery)}\n${restated("suite", suite)}\n`,
+    "utf8",
+  );
   return { root, canon };
 }
 
@@ -165,7 +176,11 @@ describe("count guard", () => {
   it("exits 2 when the canonical counts are malformed", () => {
     const dir = mkdtempSync(join(tmpdir(), "h3-count-guard-"));
     const bad = join(dir, "canon.txt");
-    writeFileSync(bad, "battery=46\nsuite=one hundred\n", "utf8");
+    writeFileSync(
+      bad,
+      `${restated("battery", 46)}\nsuite=one hundred\n`,
+      "utf8",
+    );
     const result = runGuard({ H3_SDK_COUNT_FILE: bad });
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("exactly one 'suite=");
@@ -174,7 +189,11 @@ describe("count guard", () => {
   it("exits 2 when there are no test files under src/", () => {
     const root = mkdtempSync(join(tmpdir(), "h3-count-guard-"));
     const canon = join(root, "canon.txt");
-    writeFileSync(canon, "battery=46\nsuite=3\n", "utf8");
+    writeFileSync(
+      canon,
+      `${restated("battery", 46)}\n${restated("suite", 3)}\n`,
+      "utf8",
+    );
     const result = runGuard(scratchEnv(root, canon));
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("no src/**/*.test.ts files");
@@ -274,6 +293,85 @@ describe("count guard", () => {
     const result = runGuard(scratchEnv(root, canon));
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("suite.md:1");
+  });
+
+  it("flags a stale restated suite=<N> literal in a shell file", () => {
+    const counts = readCanonical();
+    const { root, canon } = scratchTree(counts.suite);
+    const stale = counts.suite - 1;
+    writeFileSync(
+      join(root, "restated-suite.sh"),
+      `# size quoted from memory: ${restated("suite", stale)}\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("restated-suite.sh:1");
+    expect(result.stdout).toContain(
+      `suite claim suite=${stale} != ${counts.suite}`,
+    );
+  });
+
+  it("flags a stale restated battery=<N> literal", () => {
+    const counts = readCanonical();
+    const { root, canon } = scratchTree(counts.suite);
+    const stale = counts.battery - 1;
+    writeFileSync(
+      join(root, "restated-battery.sh"),
+      `# pinned battery: ${restated("battery", stale)}\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("restated-battery.sh:1");
+    expect(result.stdout).toContain(
+      `battery claim battery=${stale} != ${counts.battery}`,
+    );
+  });
+
+  it("flags the spaced, upper-case suite = <N> form", () => {
+    const counts = readCanonical();
+    const { root, canon } = scratchTree(counts.suite);
+    const stale = counts.suite - 1;
+    writeFileSync(
+      join(root, "spaced.sh"),
+      `# SUITE = ${stale} in the old notes\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("spaced.sh:1");
+    expect(result.stdout).toContain(
+      `suite claim suite=${stale} != ${counts.suite}`,
+    );
+  });
+
+  it("exempts a scanned file that restates the canonical counts", () => {
+    const counts = readCanonical();
+    const { root, canon } = scratchTree(counts.suite);
+    writeFileSync(
+      join(root, "canonical-restated.sh"),
+      `# ${restated("suite", counts.suite)} and ` +
+        `${restated("battery", counts.battery)}\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("PASS");
+  });
+
+  it("exempts a stale restated literal marked historical", () => {
+    const counts = readCanonical();
+    const { root, canon } = scratchTree(counts.suite);
+    const stale = counts.suite - 1;
+    writeFileSync(
+      join(root, "historical.sh"),
+      `# era-correct: ${restated("suite", stale)} (count-ok-historical)\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("PASS");
   });
 
   it("exempts a line marked historical", () => {

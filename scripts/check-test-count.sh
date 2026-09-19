@@ -45,7 +45,14 @@
 #                              counts after a test heading, so a three-digit number
 #                              on a line that talks about tests/suite/checks must
 #                              be canonical too — that is the form that let a
-#                              stale suite size survive here.
+#                              stale suite size survive here. A RESTATED key
+#                              literal ("suite=<N>" / "battery=<N>", spaces
+#                              around the "=" tolerated, key matched
+#                              case-insensitively) is a count claim too: the
+#                              stale literal this guard was last filed about was
+#                              exactly such a restatement in the guard's own
+#                              header, so the form is now detected rather than
+#                              relied upon to stay deleted.
 #   f. dated-report banner   — a dated record (docs/dogfood/YYYY-MM-DD-*) that
 #                              quotes a retired count must open with a
 #                              point-in-time banner "> **Historical
@@ -291,6 +298,27 @@ for f in $FILES; do
                 n = seg + 0
                 if (n != cs && n != cb)
                     flag(NR, "suite claim " n " is not a canonical count (" cs "/" cb ")", $0)
+                line = substr(line, RSTART + RLENGTH)
+            }
+            # A restated key literal — `suite=<N>` / `battery=<N>`, with spaces
+            # around the `=` tolerated and the key matched case-insensitively —
+            # is a count claim like any other. Detecting the FORM is the point:
+            # the stale literal this guard was last filed about was a bare
+            # restatement in the guard header, and deleting that line stops
+            # that line only. The digits requirement is what keeps the guard
+            # prose green: it names both keys with no number after the sign,
+            # which is a canonical pointer, not a claim.
+            line = tolower($0)
+            while (match(line, /(suite|battery)[[:space:]]*=[[:space:]]*[0-9]+/)) {
+                tok = substr(line, RSTART, RLENGTH)
+                key = tok
+                sub(/[[:space:]]*=.*$/, "", key)
+                val = tok
+                sub(/^[^=]*=[[:space:]]*/, "", val)
+                n = val + 0
+                want = (key == "battery") ? cb : cs
+                if (n != want)
+                    flag(NR, key " claim " key "=" n " != " want, $0)
                 line = substr(line, RSTART + RLENGTH)
             }
         }' "$ROOT/$f")
