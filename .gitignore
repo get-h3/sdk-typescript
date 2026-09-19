@@ -3,18 +3,25 @@ dist/
 .vitest/
 coverage/
 
-# Hilo — local graph cache (rebuildable)
+# Hilo — local graph cache (rebuildable); .vfs/.dirty and manifest.yaml are intentional
 .vfs/graph/
+
+# GitReins configuration is tracked; runtime state is local-only
 .gitreins/tasks.yaml
+.gitreins/history/
+.gitreins/logs/
+.gitreins/usage.jsonl
 .schemas-changed
+
+# npm/package-lock.json is authoritative; reject local pnpm metadata
 pnpm-lock.yaml
 pnpm-workspace.yaml
 .coding-hermes/board/board.db
 .coding-hermes/board/board.jsonl
 .coding-hermes/board/*.parquet
 
-# Stray dagger sandbox DB (hermes-dagger artifact, not part of this repo)
-dagger.db
+# Stray dagger sandbox DB and SQLite sidecars (not part of this repo)
+dagger.db*
 
 .coding-hermes/board/board.db.wal
 .coding-hermes/board/*.duckdb
