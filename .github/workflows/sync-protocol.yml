@@ -30,6 +30,14 @@ on:
   repository_dispatch:
     types: [schema-updated]
   workflow_dispatch:
+    # H3-GAP-096: a plain manual dispatch is a DIAGNOSTIC — it must run schema
+    # alignment and never publish npm or push a version/tag commit. Publishing
+    # requires flipping this explicit input.
+    inputs:
+      release:
+        description: "Run the release job (regenerate, commit, tag, publish to npm)"
+        type: boolean
+        default: false
 
 jobs:
   check-schema-alignment:
@@ -92,10 +100,11 @@ jobs:
           fi
           echo "✅ src/protocol.ts is up-to-date with protocol schemas"
 
-  # Release workflow (manual trigger after schema alignment is confirmed)
+  # Release workflow (manual trigger, and only with the explicit `release`
+  # input — a plain diagnostic dispatch stops at schema alignment)
   release:
     needs: check-schema-alignment
-    if: github.event_name == 'workflow_dispatch'
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.release == true }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
