@@ -41,6 +41,28 @@
 - **Bunker leg:** SKIPPED-install-bunker — bunker3 spawn failed `tar: No space left on device` (host / at 100%, 221G; bunkerd active, 269 stale agent users but /home only 570M). Fresh-container fallback used for the clean-machine proof.
 - **Artifacts:** docs/dogfood/2026-09-06-integration.md, diagnostics.md 09-06 section, SKILL.md v1.3.0, board GAP-050..053 + events 323..326.
 
+## 2026-09-19 — ✅ SHIPPABLE (run #6, same-day recheck of run #5)
+
+- **Project:** h3-sdk-typescript (get-h3/sdk-typescript)
+- **Verdict:** ✅ SHIPPABLE re-confirmed at `4807207` (= origin/main) — all documented
+  entry points re-exercised from scratch ~5h after run #5: GitHub install, verbatim
+  Quickstart, custom stateful harness, MockHermes, fresh clone, fresh bunker agent.
+- **Promise:** "npm install github:get-h3/sdk-typescript → implement Harness → serve →
+  46/46 compliant." Reality: HOLDS (independently re-proven, nothing carried over).
+- **Evidence:** 46/46 battery on consumer harness (0.84s, p50 4.6ms); 45/46 on the
+  verbatim Quickstart (only the documented partial-turn miss); 10-step lifecycle green
+  (GAP-050/051 fixes held); suite 172/172 canonical / 129+43-documented-skips fresh
+  clone; bunker agent 2b8421b6 install 10s + 46/46 + destroyed cleanly.
+- **Top findings:** GAP-056 premise CONFIRMED live (Quickstart ignores the request —
+  static reply for any message); GAP-059 (P3, SELF-FIXED in-run: SKILL.md v1.4.1 adds
+  the 6-endpoint route map + session-existence semantics); GAP-060 (P3, new: README
+  doesn't document terminal `cancelled` status or onCancel's boolean contract).
+- **Housekeeping:** committed the sibling-injected GAP-058 load-hygiene row that sat
+  uncommitted in the worktree (fleet board-durability law).
+- **Time-to-first-success:** ~12 min (install 11s → consumer → serve → 46/46).
+- **Artifacts:** docs/dogfood/2026-09-19-run6-integration.md, diagnostics.md run #6
+  section, SKILL.md v1.4.1, board event 398 + GAP-059/060.
+
 ## 2026-09-19 — ✅ SHIPPABLE (run #5, dogfood lane)
 
 - **Project:** h3-sdk-typescript (get-h3/sdk-typescript)

@@ -232,3 +232,51 @@ runtime error names the exact path (`tool_call.params`).
 the request body's `message` lives at `req.message.content` (never `ctx.turn`);
 `context.config` and `context.session_state` are required objects (empty dicts
 fail schema — see `_blank_context` in the battery for the minimal valid body).
+
+## 2026-09-19 — run #6 (same-day recheck)
+
+**Why a re-run the same day:** the scheduler re-picked the lane ~5h after run
+#5 blessed `4807207`. Treated as an independent verification pass rather than a
+repeat: fresh /tmp consumer, fresh bunker agent, fresh clone — nothing carried
+over from the morning run except the docs.
+
+**What was re-proven at `4807207` (= origin/main, pushed):**
+- GitHub install 11s into a scratch consumer; compiled examples ship (the
+  `./examples/*` export map earns its keep — `dist/examples/echo.js` runs
+  without any repo source).
+- Battery 46/46 on a custom stateful harness (partial turns, tool_call branch,
+  per-session counting); 45/46 for the verbatim Quickstart — the one miss is
+  the documented partial-turn limitation, not a regression.
+- 10-step HTTP lifecycle green; the two historical P0s (GAP-050 ghost
+  sessions, GAP-051 auto-vivify) stay fixed under real requests.
+- Suite 172/172 in the canonical layout; 129 passed / 43 skipped on a fresh
+  clone — the skips are the *documented* sibling-checkout tests
+  (`get-h3/protocol` absent), and the runner says so in its output. Not a
+  failure, but it means "green suite" on a fresh clone is a weaker claim than
+  "green suite in the canonical tree" — quote the right number.
+- Bunker leg (agent 2b8421b6): clone@4807207 → install 10s → echo smoke →
+  battery 46/46 via venv shim → destroyed cleanly.
+
+**New lessons:**
+1. **Run #5's GAP-056 premise correction holds under live probing:** the
+   Quickstart ignores the request entirely (two different messages, identical
+   reply). The gap is "Quickstart doesn't teach the ProcessRequest wire
+   shape", not "reads a field that doesn't exist" — the PM cycle had it right.
+2. **Skill-file drift is the residue after READMEs get fixed:** the usage
+   skill lacked `GET /v1/health` in its route list and the result-vs-session
+   semantics — both fixed in-run (SKILL.md v1.4.1). Lesson: after any wire
+   change, sweep the *skill* too, not just README; the skill is what the next
+   agent actually loads.
+3. **`cancelled` is terminal** (result after cancel = 200 but the session
+   stays `cancelled` forever) and `onCancel`'s boolean return is undocumented
+   — filed GAP-060 (P3) for the README API reference.
+4. **Board durability:** the sibling-injected GAP-058 row sat uncommitted in
+   the worktree for ~2h; per fleet law it was committed by this run. A board
+   row that only exists in the working tree survives sibling deploys by luck.
+
+**The right way for a quick re-verification pass (what run #6 actually did,
+~50 min end-to-end):** /tmp consumer + GitHub install → serve Quickstart
+verbatim (premise checks are cheap) → serve custom harness → battery → 10-step
+lifecycle curl script → fresh clone + suite → bunker agent for install proof.
+Skip nothing silent: if the bunker leg can't run, the report carries the
+SKIPPED row.

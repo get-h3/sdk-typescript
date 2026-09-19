@@ -6,7 +6,7 @@ description: >-
   compliance gate, and pitfalls that break fresh users. Load this before
   writing or reviewing any harness code, README changes, or distribution work
   in this repo.
-version: 1.4.0
+version: 1.4.1
 category: software-development
 ---
 
@@ -20,7 +20,10 @@ your harness is instantly testable against the official compliance battery.
 ## Entry points & commands
 
 - Library: `@get-h3/h3-harness-sdk` (still NOT on npm as of 2026-09-19 — GAP-001 open; install from GitHub or source, see Install)
-- Router: `createH3Router(harness)` → Hono router, 6 endpoints
+- Router: `createH3Router(harness)` → Hono router, 6 endpoints:
+  `GET /v1/health`, `POST /v1/process`, `POST /v1/result`, `POST /v1/cancel`,
+  `GET /v1/sessions/:id`, `DELETE /v1/sessions/:id` (health is at `/v1/health`,
+  NOT `/health` — a bare 404 there is the wrong-path guess)
 - Testbed: `MockHermes` for unit-testing harnesses without Hermes
 - Build: `npm ci && npm run build` (tsc → `dist/`, gitignored)
 - Test: `npm test` (vitest) · `npm run lint` (tsc --noEmit)
@@ -72,6 +75,9 @@ The README Quickstart and the Minimal Harness example both use literals correctl
   `arguments` / `call_id` — that old shape (taught by docs/dogfood/2026-08-04-integration.md, GAP-034) fails TS
   compile and is silently passed through unvalidated at runtime (GAP-033).
 - `POST /v1/result` body: `{ session_id, decision_id, result: { type, tool_name?, data?, duration_ms?, success } }` — **singular `result`**, NOT `results`
+  **Session-existence semantics (verified 2026-09-19):** result → never-created session = 404
+  `SESSION_NOT_FOUND`; result → cancelled-but-existing session = **200** + Decision, and the session's
+  status stays `cancelled` (it never flips to `completed`). `cancelled` is terminal.
 - `POST /v1/cancel` body: `{ session_id, reason: 'user_interrupt'|'timeout'|'system' }` — 404 if session unknown.
   A cancelled session's status stays `cancelled`: a later `/v1/result` returns 200 + Decision but does NOT flip it
   to `completed` (verified 2026-09-19). Sending any other `reason` → 400 listing the valid enum values.
