@@ -360,7 +360,9 @@ Response (`200`) — a `Decision`. `history` is echoed back from `context.histor
 }
 ```
 
-`status` is one of `active`, `completed`, `expired`, `cancelled`. Unknown sessions return `404` with a `SESSION_NOT_FOUND` error.
+`status` is one of `active`, `completed`, `expired`, `cancelled`. The `active` example above represents a session whose latest decision is not `end`. A session whose first `/v1/process` decision is `end` is created already `completed`; otherwise, it starts `active`. Once the loop processes an `end` decision on either a later `/v1/process` round-trip or a `/v1/result` round-trip, a non-cancelled session transitions to `completed`.
+
+`cancelled` is distinct from `completed`: `POST /v1/cancel` marks the session as cancelled, while `DELETE /v1/sessions/:id` terminates and removes it. A cancelled session cannot later transition to `completed`. `expired` is part of the protocol enum, but this SDK has no session-expiry logic and does not currently produce that status. Unknown sessions return `404` with a `SESSION_NOT_FOUND` error.
 
 #### `DELETE /v1/sessions/:id`
 
