@@ -604,6 +604,30 @@ npm test             # vitest run
 npm run fmt          # prettier --write 'src/**/*.ts'
 ```
 
+### Protocol schema prerequisite (JSON Schema validation)
+
+Part of the vitest suite — `src/__tests__/schema-validation.test.ts` — checks that
+every Zod-parsed object in `src/protocol.ts` validates against the matching H3
+protocol JSON Schema (draft 2020-12). Those schemas live in the sibling repo
+[`get-h3/protocol`](https://github.com/get-h3/protocol) under `schemas/v1`: they
+are not vendored here and are not part of the published package. A fresh clone
+therefore has no schemas, so check the sibling out next to this repo before
+running the full suite:
+
+```bash
+git clone https://github.com/get-h3/protocol ../protocol
+```
+
+That sibling checkout is the layout the suite resolves, i.e. `../protocol`
+relative to this repo's root.
+
+Without it the suite still passes: every case in `schema-validation.test.ts`
+self-skips and the run prints one message naming the missing absolute path, the
+`git clone` command above, and what those cases would check. Nothing is presented
+as passing that did not run — the cases report as skipped and every other test
+file runs unchanged. When the checkout is present, all schema-validation cases
+run and assert exactly as before.
+
 ### Quality Gates
 
 - **GitReins** quality gate mandatory for all commits

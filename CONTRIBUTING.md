@@ -39,6 +39,21 @@ sdk-typescript/
 
 ### Run Tests
 
+The suite has one non-obvious prerequisite. `src/__tests__/schema-validation.test.ts`
+validates this SDK's Zod output against the H3 protocol JSON Schema, which lives
+in the sibling [`get-h3/protocol`](https://github.com/get-h3/protocol) checkout
+under `schemas/v1` — it is not vendored here and does not ship in the published
+package. A fresh clone has no schemas, so check the sibling out next to this repo
+first (the suite resolves `../protocol` relative to this repo's root):
+
+```bash
+git clone https://github.com/get-h3/protocol ../protocol
+```
+
+Without that checkout the run is still green: those cases self-skip and print one
+message naming the missing absolute path, that `git clone` command, and what the
+cases check. With it, they all run.
+
 ```bash
 npm test
 # vitest — 165 tests across 7 test files
@@ -119,10 +134,9 @@ regenerate + prettier must yield zero diff on `src/protocol.ts`.
 #### `.schemas-changed` sentinel lifecycle
 
 The generator (`scripts/generate-schemas.ts`) is the single owner of the
-gitignored `.schemas-changed` sentinel (repo root). Every successful run (exit
-0) clears the flag unconditionally — it never leaves a stale `.schemas-changed`
+gitignored `.schemas-changed` sentinel (repo root). Every successful run (exit 0) clears the flag unconditionally — it never leaves a stale `.schemas-changed`
 containing `true` behind, no matter how it was invoked. The flag is therefore
-only meaningful *while a generation is in progress*; it is not a persistent
+only meaningful _while a generation is in progress_; it is not a persistent
 signal of pending work.
 
 CI (`sync-protocol.yml`) does not consult the sentinel. The schema-alignment

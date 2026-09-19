@@ -43,6 +43,42 @@ jobs:
         working-directory: sdk-typescript
       - run: npx vitest run
         working-directory: sdk-typescript
+      # QA-6 — a fresh clone must pass its own suite. The schema-validation file
+      # resolves the sibling ../protocol/schemas/v1, which the checkout above
+      # supplies on purpose, so CI structurally could not catch a failure that
+      # only happens without it: `git clone && npm ci && npx vitest run` died on
+      # "Schema file not found". This gate hides the sibling, runs the suite, and
+      # demands exit 0 PLUS the named self-skip message, then restores the
+      # checkout. It fails if the skip guard is removed (the suite then dies on
+      # the missing schemas) and if the message stops naming the clone command.
+      - name: Suite passes without the sibling protocol checkout (fresh-clone gate)
+        working-directory: sdk-typescript
+        run: |
+          set -euo pipefail
+          LOG="$RUNNER_TEMP/vitest-no-protocol-checkout.log"
+          mv ../protocol ../protocol-hidden
+          restore() { mv ../protocol-hidden ../protocol; }
+          trap restore EXIT
+          status=0
+          npx vitest run >"$LOG" 2>&1 || status=$?
+          restore
+          trap - EXIT
+          echo "--- npx vitest run with ../protocol hidden (exit $status) ---"
+          cat "$LOG"
+          if [ "$status" -ne 0 ]; then
+            echo "FAIL: the suite must pass without the sibling protocol checkout; it exited $status." >&2
+            exit 1
+          fi
+          if ! grep -qF "[schema-validation] SELF-SKIP" "$LOG"; then
+            echo "FAIL: the schema-validation suite did not announce its self-skip." >&2
+            echo "      Expected the named message from src/__tests__/schema-validation.test.ts." >&2
+            exit 1
+          fi
+          if ! grep -qF "git clone https://github.com/get-h3/protocol ../protocol" "$LOG"; then
+            echo "FAIL: the self-skip message does not name the command that obtains the schemas." >&2
+            exit 1
+          fi
+          echo "OK: fresh-clone suite is green and schema-validation announced its self-skip."
 
   e2e-battery:
     runs-on: ubuntu-latest
