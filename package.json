@@ -43,8 +43,8 @@
     "generate": "npx tsx scripts/generate-schemas.ts && npx prettier --write src/protocol.ts"
   },
   "dependencies": {
-    "hono": "^4.12.34",
-    "zod": "^4.4.3"
+    "hono": "^4.13.8",
+    "zod": "^4.6.5"
   },
   "overrides": {
     "fast-uri": "^3.1.5",
@@ -52,14 +52,14 @@
     "postcss": "^8.5.23"
   },
   "devDependencies": {
-    "@hono/node-server": "^2.0.12",
-    "@types/node": "^26.1.2",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@hono/node-server": "^2.1.1",
+    "@types/node": "^26.6.2",
+    "@vitest/coverage-v8": "^4.1.11",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.8",
     "typescript": "^5.4.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "keywords": [
     "h3",
