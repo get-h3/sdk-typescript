@@ -3,10 +3,8 @@ dist/
 .vitest/
 coverage/
 
-# Hilo — local cache files (rebuildable)
-.vfs/graph/graph.db
-.vfs/graph/graph.db.wal
-.vfs/graph/.last_warm
+# Hilo — local graph cache (rebuildable)
+.vfs/graph/
 .gitreins/tasks.yaml
 .schemas-changed
 pnpm-lock.yaml
