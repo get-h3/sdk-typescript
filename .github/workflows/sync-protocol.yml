@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: get-h3/protocol
-          path: /tmp/protocol
+          path: .protocol-src
 
       - uses: actions/setup-node@v4
         with:
@@ -62,7 +62,7 @@ jobs:
 
       - name: Regenerate schemas from protocol JSON Schema
         run: |
-          npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+          npx tsx scripts/generate-schemas.ts --protocol-dir .protocol-src/schemas/v1
           npx prettier --write src/protocol.ts
 
       - name: Check TypeScript compilation
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: get-h3/protocol
-          path: /tmp/protocol
+          path: .protocol-src
 
       - uses: actions/setup-node@v4
         with:
@@ -118,7 +118,7 @@ jobs:
 
       - name: Regenerate schemas
         run: |
-          npx tsx scripts/generate-schemas.ts --protocol-dir /tmp/protocol/schemas/v1
+          npx tsx scripts/generate-schemas.ts --protocol-dir .protocol-src/schemas/v1
           npx prettier --write src/protocol.ts
 
       - name: Verify tests pass
