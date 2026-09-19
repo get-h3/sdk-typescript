@@ -132,6 +132,28 @@ describe("count guard", () => {
     expect(result.stdout).toContain(String(counts.suite));
   });
 
+  it("self-scans the guard's own shell prose under real repo defaults", () => {
+    const result = runGuard();
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(
+      "no stale count literals in current-state surfaces",
+    );
+  });
+
+  it("flags a stale count in a shell script", () => {
+    const { root, canon } = scratchTree(100);
+    writeFileSync(
+      join(root, "self-check.sh"),
+      `# stale battery narration: ${retiredBattery()} tests\n`,
+      "utf8",
+    );
+    const result = runGuard(scratchEnv(root, canon));
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("self-check.sh:1");
+    expect(result.stderr).toContain("stale count literal");
+  });
+
   it("exits 2 when the canonical count file is missing", () => {
     const result = runGuard({
       H3_SDK_COUNT_FILE: join(tmpdir(), "absent-canon.txt"),

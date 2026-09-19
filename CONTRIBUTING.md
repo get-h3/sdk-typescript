@@ -28,7 +28,7 @@ sdk-typescript/
 │   └── examples/
 │       ├── echo.ts          # Battery-passing echo harness (h3-test 46/46)
 │       └── minimal.ts       # Bare-minimum example
-├── src/__tests__/           # 7 test files, 165 tests (harness, index, middleware,
+├── src/__tests__/           # 7 test files, 167 tests (harness, index, middleware,
 │                            #   protocol, schema-validation, testbed, test-count-guard)
 ├── scripts/
 │   └── generate-schemas.ts  # Regenerates src/protocol.ts from protocol schemas
@@ -56,7 +56,7 @@ cases check. With it, they all run.
 
 ```bash
 npm test
-# vitest — 165 tests across 7 test files
+# vitest — 167 tests across 7 test files
 ```
 
 ### Run Type Check
@@ -165,7 +165,7 @@ local checkout or in CI's fresh clone.
 
 ```bash
 npx tsc --noEmit     # Type check
-npm test             # Tests (165)
+npm test             # Tests (167)
 npx prettier --check 'src/**/*.ts'
 ```
 
@@ -195,7 +195,7 @@ git push origin v1.0.0
 
 ## Review Checklist
 
-- [ ] `npm test` passes (165 tests)
+- [ ] `npm test` passes (167 tests)
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npx prettier --check 'src/**/*.ts'` passes
 - [ ] `h3-test --endpoint http://localhost:9191` passes 46/46 against `src/examples/echo.ts`

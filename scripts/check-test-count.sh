@@ -4,18 +4,18 @@
 # Why this exists: the compliance battery in get-h3/shim is the single source of
 # truth for how many compliance tests exist, and this repo's vitest suite has a
 # count of its own — but nothing in THIS repo checked the prose around either.
-# The stale-count class re-offended here repeatedly (CONTRIBUTING.md advertised
-# a 144-test suite and a "Tests (141)" line long after vitest ran 149; the
-# diagnostics trail described the battery as 43 tests after it reached 46)
-# because the only sweep lived in the umbrella repo, where an SDK-only doc edit
-# is never seen. This repo owns its truth now.
+# The stale-count class re-offended here repeatedly: living contributor and
+# diagnostics prose kept quoting retired suite and battery sizes because the
+# only sweep lived in the umbrella repo, where an SDK-only doc edit is never
+# seen. This repo owns its truth now.
 #
-# Canonical inputs — scripts/test-count.txt:
-#   battery=46   the get-h3/shim compliance battery (`h3-test`): every "N/N
-#                compliant" / "N tests, 6 categories" claim in this repo is
-#                about this number.
-#   suite=149    this repo's own vitest suite: one `it(`/`test(` case per line
-#                in the files vitest.config.ts includes (`src/**/*.test.ts`).
+# Canonical inputs — scripts/test-count.txt is the only place that declares the
+# numeric battery= and suite= values; never restate those values here:
+#   battery=   the get-h3/shim compliance battery (`h3-test`): every "N/N
+#              compliant" / "N tests, 6 categories" claim in this repo is
+#              about this value.
+#   suite=     this repo's own vitest suite: one `it(`/`test(` case per line
+#              in the files vitest.config.ts includes (`src/**/*.test.ts`).
 #
 # Checks:
 #   a. canonical parse       — scripts/test-count.txt must exist and hold exactly
@@ -35,14 +35,14 @@
 #                              prose is now stale). No sibling checkout → NOTE
 #                              and continue: this repo must not depend on one.
 #   d. retired-literal sweep — no tracked current-state surface may still
-#                              advertise a RETIRED battery count (43/44/45 in
-#                              count-shaped forms, plus any "N/44"-style fraction
-#                              against a retired total).
+#                              advertise a retired battery count in count-shaped
+#                              forms, including any "N/<retired>"-style fraction
+#                              against a retired total.
 #   e. canonical-claim sweep — a living doc that states a suite size
 #                              ("<NNN> tests") or a whole-suite total
 #                              ("<NN>/<NN>", 40+) must state the canonical
 #                              number. This repo also writes bare parenthetical
-#                              counts ("# Tests (141)"), so a three-digit number
+#                              counts after a test heading, so a three-digit number
 #                              on a line that talks about tests/suite/checks must
 #                              be canonical too — that is the form that let a
 #                              stale suite size survive here.
@@ -188,7 +188,7 @@ BANNER_PATTERN='^[[:space:]]*>[[:space:]]*\*\*Historical \([0-9][0-9][0-9][0-9]-
 
 is_scanned() {
     case "$1" in
-        *.md | *.ts | *.json | *.yml | *.yaml) return 0 ;;
+        *.md | *.ts | *.json | *.yml | *.yaml | *.sh) return 0 ;;
         Makefile | */Makefile) return 0 ;;
         *) return 1 ;;
     esac
@@ -260,9 +260,9 @@ for f in $FILES; do
         BEGIN { n_seen = split(seen, sa, " ") }
         /count-ok-historical/ { next }
         {
-            # Matching happens on a lowercased copy (case-insensitive claims:
-            # "# Tests (141)" vs "144 tests"); positions align for ASCII and the
-            # message always prints the original $0.
+            # Matching happens on a lowercased copy (case-insensitive claims,
+            # including both parenthetical and inline test-count forms); positions
+            # align for ASCII and the message always prints the original $0.
             line = tolower($0)
             while (match(line, /[0-9][0-9][0-9][- ]tests?/)) {
                 n = substr(line, RSTART, RLENGTH) + 0
@@ -279,11 +279,11 @@ for f in $FILES; do
                     flag(NR, "total claim " tok " is not a canonical total (" cb "/" cs ")", $0)
                 line = substr(line, RSTART + RLENGTH)
             }
-            # This repo also writes bare parenthetical counts ("# Tests (141)"),
-            # so a three-digit count in parentheses after a count word must be
-            # canonical too — that is the form that let a stale suite size
-            # survive here. (Deliberately narrow: a bare 404, a GAP-033 id or a
-            # date is not a count claim.)
+            # This repo also writes bare parenthetical counts after count words,
+            # so a three-digit count in that position must be canonical too —
+            # that is the form that let a stale suite size survive here.
+            # Deliberately narrow: a bare 404, a GAP-033 id or a date is not a
+            # count claim.
             line = tolower($0)
             while (match(line, /(tests?|suite|specs?|vitest|pytest|checks?)[[:space:]]*\([0-9][0-9][0-9]\)/)) {
                 seg = substr(line, RSTART, RLENGTH)
