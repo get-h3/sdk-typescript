@@ -268,7 +268,7 @@ Every endpoint validates its request body against a Zod schema exported from `sr
 }
 ```
 
-`identity`, `context`, `context.config` and `context.session_state` are required objects. In other words: **config and session_state are required** — omitting them (or `identity` / `context` themselves) returns `400`. Only their inner fields default: `message.role` = `"user"`; `identity.user_name` / `user_id` = `"unknown"`; `context.history` / `tools` / `models` = `[]`; `config.max_iterations` = `100`, `config.timeout_seconds` = `60`; `session_state` counters = `0`.
+`identity`, `context`, `context.config` and `context.session_state` are required objects. In other words: **config and session_state are required** — omitting them (or `identity` / `context` themselves) returns `400`. `identity.chat_id` is **required** on the wire — a string that may be empty, but it must be present, and it does not default the way `identity.user_name` / `user_id` do (both `"unknown"`); `identity.thread_id` stays optional. Only their inner fields default: `message.role` = `"user"`; `identity.user_name` / `user_id` = `"unknown"`; `context.history` / `tools` / `models` = `[]`; `config.max_iterations` = `100`, `config.timeout_seconds` = `60`; `session_state` counters = `0`.
 
 Response (`200`) — a `Decision`. `history` is echoed back from `context.history`:
 
