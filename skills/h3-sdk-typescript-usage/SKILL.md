@@ -6,7 +6,7 @@ description: >-
   compliance gate, and pitfalls that break fresh users. Load this before
   writing or reviewing any harness code, README changes, or distribution work
   in this repo.
-version: 1.3.0
+version: 1.4.0
 category: software-development
 ---
 
@@ -19,14 +19,19 @@ your harness is instantly testable against the official compliance battery.
 
 ## Entry points & commands
 
-- Library: `@get-h3/h3-harness-sdk` (still NOT on npm as of 2026-09-06 — GAP-001 open; install from GitHub or source, see Install)
+- Library: `@get-h3/h3-harness-sdk` (still NOT on npm as of 2026-09-19 — GAP-001 open; install from GitHub or source, see Install)
 - Router: `createH3Router(harness)` → Hono router, 6 endpoints
 - Testbed: `MockHermes` for unit-testing harnesses without Hermes
 - Build: `npm ci && npm run build` (tsc → `dist/`, gitignored)
 - Test: `npm test` (vitest) · `npm run lint` (tsc --noEmit)
 - Compliance: `h3-test --endpoint http://localhost:9191` (46 tests as of 2026-09-06, from `get-h3/shim`)
 
-## Install — the working paths (re-verified 2026-09-06)
+## Install — the working paths (re-verified 2026-09-19, incl. fresh-bunker install)
+
+Fresh-machine proof (las-bunker-03 agent, 2026-09-19): clone → `npm ci && npm run build` = 10s →
+`node dist/examples/echo.js` (PORT env override) → 46/46 battery. Node 22 works out of the box.
+Note: running the compliance battery on a fresh box needs get-h3/shim, and `pip install --user` there is
+PEP-668-blocked — use a venv (shim-side docs gap).
 
 | Path | Works? |
 |---|---|
@@ -67,15 +72,15 @@ The README Quickstart and the Minimal Harness example both use literals correctl
   `arguments` / `call_id` — that old shape (taught by docs/dogfood/2026-08-04-integration.md, GAP-034) fails TS
   compile and is silently passed through unvalidated at runtime (GAP-033).
 - `POST /v1/result` body: `{ session_id, decision_id, result: { type, tool_name?, data?, duration_ms?, success } }` — **singular `result`**, NOT `results`
-- `POST /v1/cancel` body: `{ session_id, reason: 'user_interrupt'|'timeout'|'system' }` — 404 if session unknown
+- `POST /v1/cancel` body: `{ session_id, reason: 'user_interrupt'|'timeout'|'system' }` — 404 if session unknown.
+  A cancelled session's status stays `cancelled`: a later `/v1/result` returns 200 + Decision but does NOT flip it
+  to `completed` (verified 2026-09-19). Sending any other `reason` → 400 listing the valid enum values.
 - `GET /v1/sessions/:id` — 404 `SESSION_NOT_FOUND` if unknown
-- **`DELETE /v1/sessions/:id` does NOT delete (GAP-050, P0, verified 2026-09-06):** it returns
-  `{terminated:true}` 200 but the session survives — GET afterwards returns 200 with the full payload and a
-  second DELETE re-fires `onSessionTerminate`. The handler never calls `sessions.delete()`. Don't rely on
-  DELETE to free memory or make the id unknown; treat sessions as immortal until GAP-050 lands.
-- **`POST /v1/result` auto-vivifies unknown sessions (GAP-051):** result to a never-created session returns
-  200 + a Decision, while process/cancel/GET/DELETE all 404 on unknown ids. Also SDK-side `turn_count`
-  increments twice per tool_call roundtrip (process + result) — don't use it as "user turns".
+- **`DELETE /v1/sessions/:id` actually deletes (GAP-050 FIXED, re-verified live 2026-09-19):**
+  `{terminated:true}` 200 and GET afterwards is 404 `SESSION_NOT_FOUND`. No ghosts.
+- **`POST /v1/result` on a never-created session → 404 `SESSION_NOT_FOUND` (GAP-051 FIXED,
+  re-verified live 2026-09-19; the old auto-vivify 200 is gone). `turn_count` increments once per
+  process/result roundtrip (3 for process+tool_call+result).
 
 Validation failures → HTTP 400 with `code: "INVALID_REQUEST"` and a detailed
 structured error (the message lists every missing field **with its exact
@@ -95,9 +100,9 @@ counts baked into older docs).
 1. Text decisions need correct `finished`: `finished:false` for continuing turns. A harness that always returns `finished:true` fails `process_text_finished_false` (GAP-006). Reference logic in `src/examples/echo.ts` (triggers: "do not finish", "start a thought", trailing "...", "incomplete", "partial").
 2. `src/examples/echo.ts` is the battery-passing reference. `minimal.ts`/README MinimalHarness are NOT battery-passing on their own.
 3. The battery is fast (0.2s) — run it in CI or before every release.
-4. **The battery does NOT cover everything (2026-09-06 lesson):** it has no GET-after-DELETE test, which is
-   exactly where GAP-050 (DELETE never deletes) hid behind a 46/46 green. When you touch session lifecycle,
-   add your own curl checks: DELETE→GET must 404, result-to-unknown-session must be deliberate.
+4. **The battery does NOT cover everything (2026-09-06 lesson, still true):** no GET-after-DELETE test — that is
+   where GAP-050 hid behind a 46/46 green. When you touch session lifecycle, add your own curl checks:
+   DELETE→GET must 404, result-to-unknown-session must be 404 (both hold as of 2026-09-19).
 
 ## MockHermes (unit-testing)
 
@@ -126,10 +131,14 @@ serve({ fetch: app.fetch, port: 9191 }, (i) => console.log(`:${i.port}`));
 6. `tool_call` decisions use `{name, params}` — NOT `{tool_name, arguments}` (GAP-034; since GAP-033 was fixed 2026-08-14, malformed decisions now get 500 INVALID_DECISION instead of silently passing)
 7. Omit `identity`/`context`/`config`/`session_state` → 400; send `"config":{},"session_state":{}` (GAP-036)
 8. tsc consumers need `@types/node` for `@hono/node-server` serve() types (GAP-038; tsx users fine)
-9. `DELETE /v1/sessions/:id` doesn't actually delete — GET still 200 afterwards (GAP-050, P0)
-10. result to a never-created session returns 200, not 404 (GAP-051); `turn_count` counts tool_call roundtrips twice
+9. (fixed) DELETE /v1/sessions/:id removes the session — GET after is 404 (GAP-050, verified 2026-09-19)
+10. (fixed) result to a never-created session is 404 (GAP-051, verified 2026-09-19); turn_count counts each roundtrip once
 11. `identity.chat_id` is required — omit → 400 `["identity","chat_id"]` (GAP-052)
-12. The TS `Decision` type requires `history: []` in every decision literal even though the runtime schema defaults it to `[]` (GAP-053)
+12. (fixed 2026-09-19) The TS `Decision` type no longer demands `history: []` in every decision literal (GAP-053)
+13. The README Quickstart's `SessionContext` shape is not the wire shape — the request is
+    `{session_id, message:{role, content}, identity, context}` and there is no `ctx.turn`;
+    `ctx.turn?.text?.content` is silently `undefined` under tsx (no typecheck). Read content from
+    `req.message.content` and mirror `src/examples/echo.ts` for battery-passing partial-turn logic (GAP-056, open)
 
 ## Diagnostics
 

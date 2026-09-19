@@ -40,3 +40,27 @@
 - **Evidence:** 46/46 battery on custom harness; 9-step HTTP lifecycle; MockHermes in-process run; fresh node:22-bookworm container install+smoke OK; GAP-037 fix verified live (DELETE unknown → 404).
 - **Bunker leg:** SKIPPED-install-bunker — bunker3 spawn failed `tar: No space left on device` (host / at 100%, 221G; bunkerd active, 269 stale agent users but /home only 570M). Fresh-container fallback used for the clean-machine proof.
 - **Artifacts:** docs/dogfood/2026-09-06-integration.md, diagnostics.md 09-06 section, SKILL.md v1.3.0, board GAP-050..053 + events 323..326.
+
+## 2026-09-19 — ✅ SHIPPABLE (run #5, dogfood lane)
+
+- **Project:** h3-sdk-typescript (get-h3/sdk-typescript)
+- **Verdict:** ✅ SHIPPABLE — every documented entry point worked in real use (GitHub install, source
+  build, delivered echo example, MockHermes testbed); all four fixes from run #4 verified live; the
+  bunker install leg that was SKIPPED on 09-06 (disk-full) is now complete.
+- **Promise:** "npm install github:get-h3/sdk-typescript → implement Harness → serve → 46/46 compliant."
+  Reality: HOLDS — re-proven on the control host AND a fresh bunker agent.
+- **Top 3 findings:**
+  1. GAP-056 (P2): README Quickstart onProcess shape ≠ wire shape; `ctx.turn?.text?.content` is
+     silently undefined under tsx — battery green only after reading src/examples/echo.ts.
+  2. GAP-050/051 verified FIXED live: DELETE removes the session (GET after = 404); result to an
+     unknown session = 404; turn_count counts each roundtrip once.
+  3. Install leg: fresh bunker agent, clone → npm ci && npm run build = 10s → echo example → 46/46.
+     Shim side friction: `pip install --user` PEP-668-blocked on fresh Debian (venv required,
+     shim docs gap — filed to get-h3/shim, not this repo).
+- **Time-to-first-success:** ~15 min (install 7s → consumer → battery 46/46 after fixing my own
+  partial-turn/tool_call shapes; the SDK gave precise errors at every wrong step).
+- **Evidence:** 46/46 battery on custom consumer harness (0.2s, p50 1.2ms); 9-step HTTP lifecycle;
+  3/3 MockHermes vitest tests; repo suite 172/172; bunker 46/46.
+- **Bunker leg:** las-bunker-03 agent=b49993ab, install_seconds=10, smoke=ok, destroyed cleanly.
+- **Artifacts:** docs/dogfood/2026-09-19-integration.md, diagnostics.md 2026-09-19 section,
+  SKILL.md v1.4.0, board GAP-056 + GAP-057 + event 396.

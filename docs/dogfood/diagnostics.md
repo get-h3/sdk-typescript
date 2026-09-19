@@ -194,3 +194,41 @@ node:22-bookworm container instead (install → smoke OK).
 3. If you want runtime decision guarantees before GAP-033 lands, `.parse()` your decisions with the exported
    Zod schemas in the harness.
 4. Sweep `docs/dogfood/*` and the usage SKILL.md whenever `protocol.ts` regenerates (watch `.schemas-changed`).
+
+## 2026-09-19 run (#5) — fixes verified live, bunker install leg closed
+
+**Where:** fresh consumer harness (standup bot) on the control host + ephemeral
+bunker agent b49993ab on las-bunker-03 (first successful bunker leg — 09-06 was
+skipped on host disk-full). Battery 46/46 in both places; suite 172/172.
+
+**GAP-050..053 verification (real use, not test suite):**
+- GAP-050: DELETE removed the session — GET after DELETE is 404, no ghost.
+- GAP-051: result on never-created session → 404 SESSION_NOT_FOUND; turn_count
+  counts a tool_call roundtrip once (3 for process+toolcall+result, was 2×).
+- GAP-052/053: identity defaults honored (chat_id required on the wire is now
+  README'd); Decision no longer demands `history` at the type level.
+
+**New lesson (filed as GAP-056):** the Quickstart's `SessionContext` shape is
+not the wire shape — the request is `{session_id, message:{role,content},
+identity, context}` and there is no `ctx.turn`; `ctx.turn?.text?.content`
+evaluates to `undefined` silently under tsx, so the harness "works" but echoes
+nothing. I fixed my own consumer only after reading `src/examples/echo.ts`.
+A Quickstart that matches the wire schema (or is executed in CI) prevents this.
+
+**Consumer trap that is now SAFE:** a decision in the pre-GAP-033 shape
+(`{call_id, name, arguments}`) gets `500 INVALID_DECISION` with Zod issues
+instead of a silent 200. This is the fix working — the old dogfood notes call
+it the "silent hole". tsx consumers still won't see it at compile time, but the
+runtime error names the exact path (`tool_call.params`).
+
+**Install leg (bunker, fresh Debian agent):**
+- clone github:get-h3/sdk-typescript → `npm ci && npm run build` = 10s.
+- `node dist/examples/echo.js` serves; battery 46/46 against it (via a scratch
+  venv shim install).
+- PEP-668 friction (shim side): `pip install --user` is blocked on
+  externally-managed Debian; docs don't mention a venv. Filed to get-h3/shim.
+
+**The right way (updated 2026-09-19):** same as the 08-14 list, plus:
+the request body's `message` lives at `req.message.content` (never `ctx.turn`);
+`context.config` and `context.session_state` are required objects (empty dicts
+fail schema — see `_blank_context` in the battery for the minimal valid body).
