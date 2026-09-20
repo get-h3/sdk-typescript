@@ -332,6 +332,16 @@ Response (`200`) — a `Decision`. `history` is echoed back from `context.histor
 { "session_id": "sess_01J2abc", "cancelled": true }
 ```
 
+##### The `onCancel` return value
+
+The `cancelled` field in that response body carries the boolean your `onCancel` resolved to: `true` when you report the interrupt as handled, `false` when you do not. That boolean is **reported only** — it is passed straight through to the caller and does not otherwise change router behaviour. Returning `false` does not keep the session alive and does not suppress the cancellation.
+
+The session is marked `cancelled` regardless of that boolean. The router flips the session's `status` to `cancelled` after `onCancel` returns, whatever value it returned.
+
+A harness that does not implement `onCancel` at all gets the default path: HTTP `200` with `{"session_id": "...", "cancelled": true}` — `true` is hardcoded for this path — and the session is still marked `cancelled`.
+
+Cancellation is terminal on both paths. A later `POST /v1/result` for a cancelled session still returns `200` with a `Decision`, but the session never transitions to `completed` (see the terminal-status paragraph under [`GET /v1/sessions/:id`](#get-v1sessionsid--sessionresponse) below).
+
 #### `GET /v1/health` — `HealthResponse`
 
 ```json
