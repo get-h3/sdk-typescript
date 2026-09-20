@@ -14,6 +14,39 @@ test:
 commit:
   require_guard_pass: true
 
+# GitReins evaluator — size notes (measure, don't guess)
+#
+# Iteration rung: 50 -> 150 (2026-09-20). Evidence, four judged tasks in one night:
+#   GAP-056 tier2 PASS at the 50 rung (verdict 70447a2e).
+#   GAP-057 starved at 50.4 used, then PASSED on an unchanged re-run at the SAME
+#           rung (verdict 0c4fdd29) = near-miss, rung not binding on merit.
+#   GAP-058 starved 50.3, re-ran unchanged, starved 50.0 (verdicts ddaf211e and
+#           16e81e0c) = two consecutive starvations at one rung, which is what
+#           licenses a raise.
+#   GAP-060 starved 50.2; its unchanged re-run returned a MERIT finding (probe
+#           evidence kept in /tmp with no durable artifact), so that row is
+#           rework, not budget.
+# Burn samples: 57.8K / 160.5K / 187.0K / 151.0K / 168.6K tokens_in against the
+# 0.6M input rung — tokens sat 3-4x under the cap while ITERATIONS exhausted, so
+# the iteration knob (not tokens) was binding. 150 iterations at the observed
+# worst per-run rate still fits the token rung; move tokens only if a run
+# starves on tokens.
+project: "h3-sdk-typescript"
+language: "typescript"
+
+guards:
+  secrets: true
+  build: false
+  lint: false
+  tests: false
+  dead_code: false
+
+test:
+  mode: full
+
+commit:
+  require_guard_pass: true
+
 pipeline:
   stages:
     - id: tier1
@@ -28,11 +61,11 @@ pipeline:
       type: ai_eval
       on: [pre-eval]
       condition: "true"
-      max_iterations: 50
+      max_iterations: 150
       tools: [read_file, run_command, search_pattern, read_diff, sandbox, detect_dead_code]
 
 evaluator:
-  max_iterations: 50
+  max_iterations: 150
   max_time: "10m"
   max_input_tokens: "0.6M"
   max_output_tokens: "0.05M"
