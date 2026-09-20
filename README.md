@@ -83,15 +83,16 @@ import {
   type Harness,
   type Decision,
   type HealthResponse,
+  type ProcessRequest,
 } from "@get-h3/h3-harness-sdk";
 
 class MyHarness implements Harness {
-  async onProcess(): Promise<Decision> {
+  async onProcess(req: ProcessRequest): Promise<Decision> {
     return {
       decision: "text",
       decision_id: crypto.randomUUID(),
       history: [],
-      text: { content: "Hello from TypeScript!", finished: true },
+      text: { content: `You said: ${req.message.content}`, finished: true },
     };
   }
   async onResult(): Promise<Decision> {
