@@ -23,5 +23,11 @@ pnpm-workspace.yaml
 # Stray dagger sandbox DB and SQLite sidecars (not part of this repo)
 dagger.db*
 
+# Agent/namespace writers must never land in a product repo (GAP-061): a
+# DuckBrain-style namespaces/<ns>/ tree was auto-committed here by an agent
+# whose CWD resolved to this checkout. Guard, not a licence — the writer's
+# output path must stay on the lane workdir.
+namespaces/
+
 .coding-hermes/board/board.db.wal
 .coding-hermes/board/*.duckdb
