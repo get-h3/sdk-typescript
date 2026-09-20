@@ -24,9 +24,16 @@
  * Retired counts are assembled from digit fragments so this file's own source
  * carries none of them: the guard sweeps tracked `*.ts` files too, and a test
  * that hardcoded them would fail the very sweep it is testing.
+ *
+ * Load hygiene (GAP-058 / LOAD-HYGIENE): this file's cost is its process
+ * fan-out, not its assertions — one guard run over the repo as-is forks a
+ * `git`/`grep`/`sed`/`awk` fan-out over every tracked file. So the read-only
+ * cases share a single spawn per test-file run (see `runRepoGuardOnce` below)
+ * while every case whose input differs keeps a private process. The audit
+ * artifact for the whole vitest suite is `docs/audits/test-suite-load.md`.
  */
 
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -65,7 +72,10 @@ function readCanonical(): Record<string, number> {
   return found;
 }
 
-function runGuard(env_overrides: Record<string, string> = {}) {
+/** One synchronous guard invocation, captured with utf8 stdio. */
+type GuardRun = SpawnSyncReturns<string>;
+
+function runGuard(env_overrides: Record<string, string> = {}): GuardRun {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (key.startsWith("H3_SDK_")) continue;
@@ -73,6 +83,44 @@ function runGuard(env_overrides: Record<string, string> = {}) {
   }
   Object.assign(env, env_overrides);
   return spawnSync("sh", [GUARD], { cwd: REPO_ROOT, env, encoding: "utf8" });
+}
+
+/**
+ * GAP-058 (LOAD-HYGIENE) — the READ-ONLY guard run, scoped to this test file.
+ *
+ * Every case that runs the guard over the repo AS-IS asks the same question of
+ * the same immutable inputs: the tracked tree, the canonical counts and the
+ * guard script cannot change while one vitest file runs, and the guard's output
+ * is deterministic. Each such case used to pay its own `spawnSync` — 0.25s and a
+ * `git`/`grep`/`sed`/`awk` fan-out over every tracked file — for output no other
+ * case could distinguish. This is the vitest idiom of the task-router suite's
+ * session-scoped expensive fixture (TR-077/TR-078): one build shared by the
+ * read-only consumers, a private copy for anything that mutates its input.
+ *
+ * `runRepoGuardOnce` IS this file run's only repo-as-is spawn, and it is a real
+ * child process, never a canned object: the case that owns the process boundary
+ * asserts the live `pid`, the exit status and stdout/stderr. `repoAsIsSpawns` is
+ * the parity proof — it stays 1, so a consumer that silently re-executed the
+ * guard (or a stubbed run) fails instead of passing quietly. No second
+ * compare-with-a-fresh-run spawn is made on purpose: it would re-add exactly the
+ * spawn this change removes, and the only thing it could catch cannot happen
+ * here — the guard is deterministic, and every mutating case below writes inside
+ * its own `mkdtemp` tree, never into the repo-as-is.
+ *
+ * Cases whose INPUT differs keep a private fresh process, because the fresh
+ * process is their subject: the misconfiguration/drift cases override
+ * H3_SDK_COUNT_FILE / H3_SDK_SHIM_COUNT_FILE, and the fixture cases hand the
+ * guard a private tree they just wrote.
+ */
+let sharedRepoRun: GuardRun | undefined;
+let repoAsIsSpawns = 0;
+
+function runRepoGuardOnce(): GuardRun {
+  if (sharedRepoRun === undefined) {
+    repoAsIsSpawns += 1;
+    sharedRepoRun = runGuard();
+  }
+  return sharedRepoRun;
 }
 
 /** A self-contained scan root: `suite` vitest cases + a canonical count file. */
@@ -133,9 +181,15 @@ describe("count guard", () => {
     }
   });
 
+  // GAP-058: READ-ONLY consumer #1, and the case that owns the process
+  // boundary — `runRepoGuardOnce` performs the file run's single real repo-as-is
+  // spawn here, so the assertions below run against a live child's stdio. The
+  // `pid` and `repoAsIsSpawns` checks are what keep the shared run honest.
   it("passes on the current tree and names the canonical counts", () => {
     const counts = readCanonical();
-    const result = runGuard();
+    const result = runRepoGuardOnce();
+    expect(repoAsIsSpawns).toBe(1);
+    expect(result.pid).toBeGreaterThan(0);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("PASS");
@@ -143,8 +197,12 @@ describe("count guard", () => {
     expect(result.stdout).toContain(String(counts.suite));
   });
 
+  // GAP-058: READ-ONLY consumer #2 — the identical question, so it asserts the
+  // identical cached result instead of paying a second spawn (0.25s + the whole
+  // tracked-file fan-out). `repoAsIsSpawns` still 1 proves no re-exec happened.
   it("self-scans the guard's own shell prose under real repo defaults", () => {
-    const result = runGuard();
+    const result = runRepoGuardOnce();
+    expect(repoAsIsSpawns).toBe(1);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
