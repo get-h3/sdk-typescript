@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
-import Ajv from "ajv";
+import Ajv, { type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
 
 import {
@@ -125,45 +125,65 @@ const ALL_SCHEMAS = [
   "wait.json",
 ];
 
+const schemaCache = new Map<string, Record<string, unknown>>();
+
 function loadSchema(name: string): Record<string, unknown> {
+  const cached = schemaCache.get(name);
+  if (cached !== undefined) return cached;
+
   const path = resolve(SCHEMA_DIR, name);
   if (!existsSync(path)) {
     throw new Error(`Schema file not found: ${path}`);
   }
-  return JSON.parse(readFileSync(path, "utf-8"));
+  const schema = JSON.parse(readFileSync(path, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  schemaCache.set(name, schema);
+  return schema;
 }
 
-/** Validate a Zod-parsed object against a named JSON Schema file.
- *  Creates a fresh Ajv per call to avoid "schema already exists" errors. */
-function validateAgainstSchema(instance: object, schemaName: string): void {
-  const schema = loadSchema(schemaName);
-  const ajv = new Ajv({
-    strict: false,
-    allowUnionTypes: true,
-    validateSchema: false,
-    allErrors: true,
-  });
-  addFormats(ajv);
+const validatorBuilds = new Map<string, number>();
+const validators = new Map<string, ValidateFunction>();
+let sharedAjv: Ajv | undefined;
 
-  // Add all OTHER schemas for $ref resolution (skip the one we're testing)
-  if (existsSync(SCHEMA_DIR)) {
+function getValidator(schemaName: string): ValidateFunction {
+  const cached = validators.get(schemaName);
+  if (cached !== undefined) return cached;
+
+  if (sharedAjv === undefined) {
+    sharedAjv = new Ajv({
+      strict: false,
+      allowUnionTypes: true,
+      validateSchema: false,
+      allErrors: true,
+    });
+    addFormats(sharedAjv);
     for (const name of ALL_SCHEMAS) {
-      if (name !== schemaName) {
-        const path = resolve(SCHEMA_DIR, name);
-        if (existsSync(path)) {
-          const s = JSON.parse(readFileSync(path, "utf-8"));
-          // $id might collide; use anonymous schema registration
-          try {
-            ajv.addSchema(s);
-          } catch {
-            /* already added */
-          }
-        }
+      if (existsSync(resolve(SCHEMA_DIR, name))) {
+        sharedAjv.addSchema(loadSchema(name));
       }
     }
   }
 
-  const validate = ajv.compile(schema);
+  const schema = loadSchema(schemaName);
+  const schemaId = schema.$id;
+  if (typeof schemaId !== "string") {
+    throw new Error(`Schema ${schemaName} has no string $id`);
+  }
+  const validate = sharedAjv.getSchema(schemaId);
+  if (validate === undefined) {
+    throw new Error(`Schema validator not registered: ${schemaName}`);
+  }
+
+  validators.set(schemaName, validate);
+  validatorBuilds.set(schemaName, (validatorBuilds.get(schemaName) ?? 0) + 1);
+  return validate;
+}
+
+/** Validate a Zod-parsed object with the session-cached protocol validator. */
+function validateAgainstSchema(instance: object, schemaName: string): void {
+  const validate = getValidator(schemaName);
   const valid = validate(instance);
 
   if (!valid) {
@@ -347,6 +367,7 @@ describe.skipIf(!SCHEMAS_AVAILABLE)(
         end: { reason: "task_complete", summary: "All done!" },
       });
       validateAgainstSchema(d as object, "decision.json");
+      expect(validatorBuilds.get("decision.json")).toBe(1);
     });
   },
 );
