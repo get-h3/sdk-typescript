@@ -262,6 +262,115 @@ describe("POST /v1/result", () => {
     expect(res.status).toBe(400);
   });
 
+  it("accepts a fractional duration_ms and passes it through (H3TS-GAP-063)", async () => {
+    // result-request.json types duration_ms as "integer", but the py SDK types
+    // it float and every real H3ShimLoop run measures a fractional monotonic
+    // float (shim_loop.py executors), so an int-only schema 400s each result
+    // POST against a zod-strict harness. Fractional milliseconds are therefore
+    // legal on ResultRequestSchema.result — exactly as they already are on
+    // ResultPayloadSchema, the SDK's own payload schema.
+    const seen: number[] = [];
+    const app = makeApp(
+      makeHarness({
+        onResult: async (req) => {
+          seen.push(req.result.duration_ms as number);
+          return {
+            decision: "end",
+            decision_id: crypto.randomUUID(),
+            end: { reason: "task_complete" },
+          };
+        },
+      }),
+    );
+    // GAP-051: create the session first — /v1/result 404s unknown sessions.
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-frac",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
+
+    const res = await app.request("/v1/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-frac",
+        decision_id: "dec-001",
+        result: {
+          type: "tool_result",
+          tool_name: "search",
+          data: { found: true },
+          success: true,
+          duration_ms: 0.42,
+        },
+      }),
+    });
+    expect(res.status).toBe(200);
+    // Accepted by the router AND delivered to the harness unchanged.
+    expect(seen).toEqual([0.42]);
+  });
+
+  it("rejects a negative duration_ms with 400 (H3TS-GAP-063)", async () => {
+    // Relaxing int → number must not relax the lower bound.
+    const app = makeApp(makeHarness());
+    // GAP-051: create the session first — /v1/result 404s unknown sessions.
+    await app.request("/v1/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-neg",
+        message: { role: "user", content: "Hello" },
+        identity: { platform: "test", chat_id: "test" },
+        context: {
+          history: [],
+          tools: [],
+          models: [],
+          config: { max_iterations: 10, timeout_seconds: 300 },
+          session_state: {
+            turn_count: 0,
+            total_tool_calls: 0,
+            total_llm_calls: 0,
+            cost_so_far: 0,
+          },
+        },
+      }),
+    });
+
+    const res = await app.request("/v1/result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: "ses-neg",
+        decision_id: "dec-001",
+        result: {
+          type: "tool_result",
+          tool_name: "search",
+          success: true,
+          duration_ms: -1,
+        },
+      }),
+    });
+    expect(res.status).toBe(400);
+
+    const body = await res.json();
+    expect(body.error.code).toBe("INVALID_REQUEST");
+  });
+
   it("returns end on harness error", async () => {
     const app = makeApp(
       makeHarness({
