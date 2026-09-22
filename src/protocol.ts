@@ -266,7 +266,7 @@ export const ResultRequestSchema = z.object({
     ] as const),
     tool_name: z.string().optional(),
     data: z.record(z.string(), z.unknown()).optional(),
-    duration_ms: z.number().int().min(0).optional(),
+    duration_ms: z.number().min(0).optional(),
     success: z.boolean(),
   }),
 });

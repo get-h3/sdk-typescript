@@ -159,6 +159,18 @@ const FIELD_OVERRIDES: Record<string, Record<string, string>> = {
     data: "REPLACE:z.record(z.string(), z.unknown())",
     duration_ms: "REPLACE:z.number().min(0)", // schema says integer, but ms can be fractional
   },
+  ResultRequest: {
+    // H3TS-GAP-063 — result-request.json types duration_ms as "integer", but
+    // the py SDK types the same field float and every real H3ShimLoop run
+    // assigns a measured fractional monotonic float, so an int-only schema
+    // 400s EVERY result POST against a zod-strict harness. Fractional
+    // milliseconds are legal here for the same reason they are on
+    // ResultPayload above; the py-side shim keeps a strict xfail probe that
+    // auto-flips when this override is in place. Keep the two entries in
+    // lockstep — splitting them is how the request wrapper drifted from the
+    // payload schema (and from the SDK's own contract) in the first place.
+    duration_ms: "REPLACE:z.number().min(0)", // schema says integer, but ms can be fractional
+  },
   ErrorDetail: {
     details: "REPLACE:z.record(z.string(), z.unknown())",
   },
