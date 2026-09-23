@@ -31,3 +31,4 @@ namespaces/
 
 .coding-hermes/board/board.db.wal
 .coding-hermes/board/*.duckdb
+.gitreins/tasks.yaml.lock
