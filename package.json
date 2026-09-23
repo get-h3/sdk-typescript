@@ -54,12 +54,12 @@
   "devDependencies": {
     "@hono/node-server": "^2.1.1",
     "@types/node": "^26.6.2",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "prettier": "^3.9.8",
-    "typescript": "^5.4.0",
-    "vitest": "^4.1.11"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   },
   "keywords": [
     "h3",
