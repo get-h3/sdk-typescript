@@ -50,6 +50,7 @@ import {
   type Decision,
   type HealthResponse,
 } from "@get-h3/h3-harness-sdk";
+import { serve } from "@hono/node-server";
 
 class MyHarness implements Harness {
   async onProcess(): Promise<Decision> {
@@ -81,8 +82,24 @@ class MyHarness implements Harness {
 
 const app = new Hono();
 app.route("/", createH3Router(new MyHarness()));
-export default app;
+
+serve({ fetch: app.fetch, port: 9191 });
 ```
+
+Install the server deps (README "Serving your harness"), then run it —
+`tsx quickstart.ts` (or compile with `tsc` and run `node`) — and it
+listens on port 9191, the h3-test battery's default target:
+
+```bash
+npm i @hono/node-server
+npm i -D @types/node
+```
+
+> **Partial turns:** a battery-passing harness must return
+> `finished: false` when the message says "do not finish", "start a
+> thought", or ends with "..." — the Quickstart above always finishes.
+> See the compliance reference below and the README's
+> "Partial turns — `finished: false`" section.
 
 > **Type-only exports:** enum-like names such as `DecisionType` are exported as
 > TypeScript types only (runtime validation happens via the companion Zod
